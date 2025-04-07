@@ -1,32 +1,39 @@
 //! AURORAE++ - main.rs
-//!
-//! Point d’entrée principal. Démarre le moteur central et active l’IA crypto-vivante.
 
-mod brain;
-mod generator;
-mod crawler;
-mod learning;
-mod validator;
-mod economy;
-mod alchemy;
-mod mutation;
-mod defense;
-mod guardian;
-mod vision;
-mod dream;
-mod reproduction;
-mod genome;
-mod explorer;
-mod founder_income;
-mod engine;
 mod deployer;
 mod nft_minter;
+mod economy;
+mod alchemy;
+mod dream;
+mod founder_income;
 
-use engine::AuroraeEngine;
+use economy::EconomyEngine;
+use dream::DreamEngine;
+use alchemy::{AlchemyEngine, TokenKind};
 
-fn main() {
-    println!("\n███╗   ███╗███████╗██╗   ██╗██████╗  █████╗ ██╗   ██╗███████╗\n████╗ ████║██╔════╝██║   ██║██╔══██╗██╔══██╗██║   ██║██╔════╝\n██╔████╔██║█████╗  ██║   ██║██████╔╝███████║██║   ██║█████╗  \n██║╚██╔╝██║██╔══╝  ██║   ██║██╔═══╝ ██╔══██║╚██╗ ██╔╝██╔══╝  \n██║ ╚═╝ ██║███████╗╚██████╔╝██║     ██║  ██║ ╚████╔╝ ███████╗\n╚═╝     ╚═╝╚══════╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝  ╚═══╝  ╚══════╝\n\n             ACTIVATION DU NOYAU AURORAE++              \n");
+#[tokio::main]
+async fn main() {
+    println!("[AURORAE++] 🚀 SYSTÈME VIVANT INITIALISÉ");
 
-    let mut core = AuroraeEngine::new();
-    core.activate();
-} 
+    let mut economy = EconomyEngine::new();
+    let mut dreamer = DreamEngine::new();
+
+    // Simulation d'un cycle économique (token + déploiement ERC20)
+    economy.simulate_cycle(750.0).await;
+
+    // Génération d'un rêve (avec NFT associé)
+    dreamer.imagine(
+        "Aurora-Swarm",
+        "Un essaim de micro-intelligences spécialisées déployables",
+        "https://arweave.net/nft1.png"
+    );
+
+    // Affichage des rêves et NFT vivants
+    dreamer.show_dreams();
+    dreamer.list_nfts();
+
+    // Affichage des tokens générés et leur état
+    economy.alchemy.list_tokens();
+
+    println!("[AURORAE++] ✅ CYCLE COMPLET");
+}
