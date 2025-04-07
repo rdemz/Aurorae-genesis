@@ -50,7 +50,7 @@ impl AlchemyEngine {
         println!("[AURORAE++] 🔥 TOKEN FORGÉ : {} | Supply: {}", token.name, token.supply);
 
         // Reversement automatique au fondateur
-        let reward = (supply as f64 * creator_share) as u64;
+        let reward = (supply as f64 * creator_share);
         reward_founder(reward);
 
         // ✅ Déploiement automatique si c’est Auroraium (ou un autre token vivant)
