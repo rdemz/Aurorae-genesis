@@ -26,7 +26,7 @@ pub fn validate_generated_module(path: &str) -> ValidationResult {
     // Crée un Cargo.toml minimal si nécessaire
     let cargo_path = module_path.join("Cargo.toml");
     if !cargo_path.exists() {
-        if let Err(e) = fs::write(&cargo_path, minimal_cargo_toml()) {
+        if let Err(_e) = fs::write(&cargo_path, minimal_cargo_toml()) {
             return ValidationResult::InternalError(format!("Erreur écriture Cargo.toml: {}", e));
         }
     }
