@@ -43,39 +43,38 @@ impl GuardianSentinel {
     }
 
 pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
-    let recovery_needed;
-
-    {
-        // Borrowing limited to this block
-        let module = self.registry.get_mut(name);
-        if let Some(module) = module {
+    // First, check if the module exists and if recovery is needed
+    let need_recovery = {
+        if let Some(module) = self.registry.get_mut(name) {
             module.last_check = Utc::now().to_rfc3339();
             module.status = status.clone();
             println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
-
-            recovery_needed = matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted)
-                && !module.recovery_attempted;
+            
+            // Determine if recovery is needed
+            matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted)
+                && !module.recovery_attempted
         } else {
-            return;
+            false
         }
-    }
-
-    // New scope → new borrowing possible
-    if recovery_needed {
+    }; // First mutable borrow ends here with the scope
+    
+    // If recovery is needed, perform it in a separate borrow
+    if need_recovery {
         if let Some(module) = self.registry.get_mut(name) {
             self.attempt_recovery(module);
         }
     }
 }
 
-    pub fn attempt_recovery(&mut self, module: &mut MonitoredModule) {
-        println!(
-            "[AURORAE++] 🚑 Tentative de récupération pour module : {}",
-            module.name
-        );
-        module.recovery_attempted = true;
-        module.status = ModuleStatus::Operational;
-    }
+// The attempt_recovery method remains unchanged
+pub fn attempt_recovery(&mut self, module: &mut MonitoredModule) {
+    println!(
+        "[AURORAE++] 🚑 Tentative de récupération pour module : {}",
+        module.name
+    );
+    module.recovery_attempted = true;
+    module.status = ModuleStatus::Operational;
+}
 
     pub fn status_report(&self) {
         println!("[AURORAE++] 🔍 RAPPORT DE SANTÉ DES MODULES :");
