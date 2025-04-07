@@ -1,5 +1,10 @@
+//! AURORAE++ - economy.rs
+//!
+//! Ce module gère la simulation économique, les flux de valeur, et la génération de tokens vivants.
+
 use chrono::Utc;
 use crate::founder_income::reward_founder;
+use crate::alchemy::{AlchemyEngine, TokenKind};
 
 #[derive(Debug, Clone)]
 pub struct EconomicCycle {
@@ -13,7 +18,8 @@ pub struct EconomicCycle {
 pub struct EconomyEngine {
     pub cycles: Vec<EconomicCycle>,
     pub total_generated: f64,
-    pub founder_percentage: f64, // ex: 0.15 for 15%
+    pub founder_percentage: f64,
+    pub alchemy: AlchemyEngine,
 }
 
 impl EconomyEngine {
@@ -22,14 +28,15 @@ impl EconomyEngine {
             cycles: vec![],
             total_generated: 0.0,
             founder_percentage: 0.15,
+            alchemy: AlchemyEngine::new(),
         }
     }
 
-    pub fn simulate_cycle(&mut self, value_created: f64) {
+    pub async fn simulate_cycle(&mut self, value_created: f64) {
         let to_founder = value_created * self.founder_percentage;
         let to_ai = value_created - to_founder;
 
-        reward_founder(to_founder);
+        reward_founder(to_founder as u64);
 
         let cycle = EconomicCycle {
             timestamp: Utc::now().to_rfc3339(),
@@ -40,12 +47,19 @@ impl EconomyEngine {
 
         self.total_generated += value_created;
         self.cycles.push(cycle);
+
+        println!("[AURORAE++] 🌐 TOTAL GÉNÉRÉ : {:.4} tokens", self.total_generated);
+        println!("→ Cycle {} • {:.0} tokens créés • {:.2} au fondateur", self.cycles.len(), value_created, to_founder);
+
+        // ✅ Déclencher une forge de token Auroraium à chaque cycle
+        self.alchemy
+            .mint_token("Auroraium", TokenKind::Fungible, value_created as u64, self.founder_percentage)
+            .await;
     }
 
     pub fn summarize(&self) {
-        println!("[AURORAE++] 🌐 TOTAL GÉNÉRÉ : {:.4} tokens", self.total_generated);
         for (i, c) in self.cycles.iter().enumerate() {
-            println!("→ Cycle {} • {} tokens créés • {:.2} au fondateur", i + 1, c.generated_tokens, c.sent_to_founder);
+            println!("Cycle {} • {} générés • {:.2} fondateur", i + 1, c.generated_tokens, c.sent_to_founder);
         }
     }
 
