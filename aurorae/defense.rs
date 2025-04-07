@@ -35,6 +35,7 @@ impl DefenseMatrix {
     }
 
     pub fn detect_threat(&mut self, threat_type: ThreatType, details: &str) {
+        let cloned_type = threat_type.clone();
         let report = ThreatReport {
             id: Uuid::new_v4(),
             detected_at: Utc::now().to_rfc3339(),
@@ -43,7 +44,7 @@ impl DefenseMatrix {
             neutralized: false,
         };
 
-        println!("[AURORAE++] ⚠️ MENACE DÉTECTÉE : {:?} — {}", threat_type, details);
+        println!("[AURORAE++] ⚠️ MENACE DÉTECTÉE : {:?} — {}", cloned_type, details);
         self.reports.push(report);
     }
 
