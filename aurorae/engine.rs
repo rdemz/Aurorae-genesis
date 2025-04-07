@@ -14,7 +14,7 @@ use crate::validator::validate_generated_module;
 use crate::economy::EconomyEngine;
 use crate::alchemy::{AlchemyEngine, TokenKind};
 use crate::mutation::mutate_module_code;
-use crate::defense::{DefenseMatrix, ThreatType};
+use crate::defense::DefenseMatrix;
 use crate::guardian::{GuardianSentinel, ModuleStatus};
 use crate::vision::{VisionEngine, ObjectiveType};
 use crate::dream::DreamEngine;
