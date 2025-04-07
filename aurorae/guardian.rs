@@ -41,25 +41,27 @@ impl GuardianSentinel {
     }
 
 pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
-    let needs_recovery = {
-        if let Some(module) = self.registry.get_mut(name) {
-            module.last_check = Utc::now().to_rfc3339();
-            module.status = status.clone();
-            println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
-            matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted) && !module.recovery_attempted
-        } else {
-            return;
-        }
-    };
+    let mut recovery_needed = false;
 
-    if needs_recovery {
-        // Maintenant on peut ré-emprunter
+    if let Some(module) = self.registry.get_mut(name) {
+        module.last_check = Utc::now().to_rfc3339();
+        module.status = status.clone();
+        println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
+
+        if matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted)
+            && !module.recovery_attempted
+        {
+            recovery_needed = true;
+        }
+    }
+
+    // ✅ On fait une 2e emprunt uniquement ici
+    if recovery_needed {
         if let Some(module) = self.registry.get_mut(name) {
             self.attempt_recovery(module);
         }
     }
 }
-
     pub fn attempt_recovery(&mut self, module: &mut MonitoredModule) {
         println!("[AURORAE++] 🚑 Tentative de récupération pour module : {}", module.name);
         module.recovery_attempted = true;
