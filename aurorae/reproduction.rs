@@ -1,3 +1,4 @@
+
 //! AURORAE++ - reproduction.rs
 //!
 //! Ce module permet à l'IA de se reproduire : générer d'autres intelligences spécialisées,
@@ -5,7 +6,6 @@
 
 use uuid::Uuid;
 use chrono::Utc;
-use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct AuroraInstance {
