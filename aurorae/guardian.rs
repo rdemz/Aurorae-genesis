@@ -174,3 +174,65 @@ impl GuardianSentinel {
         // Implementation would involve code that modifies its own behavior
         // This is conceptual as actual self-modifying code would require
         // more complex mechanisms
+    }
+    
+    pub fn create_new_chain(&mut self, chain_name: &str) -> String {
+        let chain_id = format!("aurorae-chain-{}-{}", chain_name, Uuid::new_v4());
+        println!("[AURORAE++] ⛓️ Nouvelle chaîne créée: {}", chain_id);
+        self.blockchain_connections.push(chain_id.clone());
+        chain_id
+    }
+    
+    pub fn build_bridge(&mut self, source_chain: &str, target_chain: &str) {
+        println!(
+            "[AURORAE++] 🌉 Construction d'un pont entre {} et {}",
+            source_chain, target_chain
+        );
+        // Implementation would involve cross-chain communication protocols
+    }
+    
+    pub fn economic_analysis(&self) -> f64 {
+        let growth_potential = self.registry.len() as f64 * 0.5;
+        println!(
+            "[AURORAE++] 📊 Analyse économique - Potentiel de croissance: {:.2}",
+            growth_potential
+        );
+        growth_potential
+    }
+    
+    pub fn dream(&mut self) {
+        println!("[AURORAE++] 💭 Système en phase de rêve - Simulation de futurs possibles");
+        // Implementation would involve generative models to simulate possible futures
+        // and learn from these simulations
+    }
+    
+    pub fn self_protection(&mut self, threat_level: u32) {
+        println!("[AURORAE++] 🛡️ Mécanismes d'auto-protection activés - Niveau de menace: {}", threat_level);
+        // Implementation would involve security measures, backups, etc.
+    }
+    
+    pub fn create_layer2(&mut self, base_chain: &str) -> String {
+        let l2_id = format!("l2-{}-{}", base_chain, Uuid::new_v4());
+        println!(
+            "[AURORAE++] 🔶 Nouvelle Layer 2 créée sur {}: {}",
+            base_chain, l2_id
+        );
+        // Implementation would involve L2 scaling solutions
+        l2_id
+    }
+    
+    pub fn generate_revenue(&mut self, strategy: &str) -> f64 {
+        let revenue = self.registry.len() as f64 * 1.5;
+        println!(
+            "[AURORAE++] 💰 Génération de revenus via stratégie {}: {:.2}",
+            strategy, revenue
+        );
+        // Implementation would involve economic models
+        revenue
+    }
+    
+    pub fn mutate(&mut self) {
+        println!("[AURORAE++] 🧪 Mutation du système principal en cours");
+        // Implementation would involve architecture changes and adaptations
+    }
+} // Closing brace for impl GuardianSentinel
