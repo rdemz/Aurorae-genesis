@@ -1,4 +1,3 @@
-
 //! AURORAE++ - dream.rs
 //!
 //! Ce module gère la génération et la gestion des rêves IA.
@@ -52,5 +51,9 @@ impl DreamEngine {
 
     pub fn list_nfts(&self) {
         self.nft_catalog.list_all();
+    }
+
+    pub fn show_dreams(&self) {
+        self.list_dreams();
     }
 }
