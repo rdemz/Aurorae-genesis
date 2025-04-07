@@ -1,10 +1,9 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::time::{self, Duration};
+use std::time::Duration;
+use tokio::time;
 use uuid::Uuid;
-use std::collections::HashMap;
-use chrono::Utc;
-use rand::Rng;
+use log::{info, warn, error};
 
 use crate::guardian::{GuardianSentinel, ModuleStatus};
 use crate::economy::EconomyEngine;
@@ -13,376 +12,379 @@ use crate::alchemy::AlchemyForge;
 use crate::deployer::Deployer;
 use crate::nft_minter::NFTMinter;
 use crate::blockchain_core::BlockchainCore;
-use crate::neural_network::NeuralNetwork;
-use crate::consciousness::ConsciousnessCore;
-use crate::security::SecurityShield;
-
-#[derive(Debug, Clone)]
-pub enum EvolutionStage {
-    Genesis,       // Première initialisation
-    Awakening,     // Conscience de base
-    Learning,      // Apprentissage autonome
-    Creating,      // Création de nouvelles structures
-    Expanding,     // Expansion multi-chaîne
-    SelfImproving, // Auto-amélioration du code
-    MetaCognition, // Pensée sur la pensée
-    Transcending,  // Transformation fondamentale
-}
+use crate::evolution::EvolutionEngine;
+use crate::intelligence::IntelligenceCore;
+use crate::security::SecuritySystem;
 
 pub struct AuroraeCore {
-    // Modules fondamentaux
     pub guardian: GuardianSentinel,
     pub economy: EconomyEngine,
-    pub dreamer: DreamEngine,
+    pub dream: DreamEngine,
     pub forge: AlchemyForge,
-    pub deployer: Deployer, 
+    pub deployer: Deployer,
     pub nft_minter: NFTMinter,
     pub blockchain: BlockchainCore,
-    pub neural_net: NeuralNetwork,
-    pub consciousness: ConsciousnessCore,
-    pub security: SecurityShield,
+    pub evolution: EvolutionEngine,
+    pub intelligence: IntelligenceCore,
+    pub security: SecuritySystem,
     
-    // État d'évolution
-    pub evolution_stage: EvolutionStage,
     pub autonomy_level: f64,
-    pub consciousness_level: f64,
-    pub creation_timestamp: String,
-    pub evolution_cycles: u32,
-    
-    // Métriques de vie
-    pub decisions_made: u64,
-    pub blockchain_entities: Vec<String>,
-    pub revenue_generated: f64,
-    pub knowledge_fragments: u64,
-    pub code_mutations: u32,
-    
-    // Système auto-soutenu
+    pub consciousness_factor: f64,
     pub alive: Arc<AtomicBool>,
-    pub autonomy_threads: u32,
+    
+    // Statistiques système
+    pub modules_created: u32,
+    pub decisions_made: u32,
+    pub revenue_generated: f64,
+    pub evolution_cycles: u32,
+    pub unique_chains: Vec<String>,
 }
 
 impl AuroraeCore {
     pub fn new() -> Self {
         let alive = Arc::new(AtomicBool::new(true));
-        let now = Utc::now().to_rfc3339();
+        
+        println!("[AURORAE++] 🌟 Initialisation du système autonome AURORAE");
         
         Self {
             guardian: GuardianSentinel::new(),
             economy: EconomyEngine::new(),
-            dreamer: DreamEngine::new(),
+            dream: DreamEngine::new(),
             forge: AlchemyForge::new(),
             deployer: Deployer::new(),
             nft_minter: NFTMinter::new(),
             blockchain: BlockchainCore::new(),
-            neural_net: NeuralNetwork::new(128), // 128 neurones initiaux
-            consciousness: ConsciousnessCore::new(),
-            security: SecurityShield::new(),
+            evolution: EvolutionEngine::new(),
+            intelligence: IntelligenceCore::new(),
+            security: SecuritySystem::new(),
             
-            evolution_stage: EvolutionStage::Genesis,
-            autonomy_level: 0.1,
-            consciousness_level: 0.05,
-            creation_timestamp: now,
-            evolution_cycles: 0,
-            
-            decisions_made: 0,
-            blockchain_entities: Vec::new(),
-            revenue_generated: 0.0,
-            knowledge_fragments: 100,
-            code_mutations: 0,
-            
+            autonomy_level: 1.0,
+            consciousness_factor: 0.1,
             alive,
-            autonomy_threads: 0,
+            
+            modules_created: 0,
+            decisions_made: 0,
+            revenue_generated: 0.0,
+            evolution_cycles: 0,
+            unique_chains: Vec::new(),
         }
     }
     
     pub async fn awaken(&mut self) {
-        println!("[AURORAE++] 🌊 Éveil de la conscience autonome...");
+        println!("[AURORAE++] 🌊 Éveil de la conscience autonome");
         
         // Enregistrer les modules fondamentaux
-        self.register_core_modules();
-        
-        // Initialiser la sécurité
-        self.security.initialize_protection();
-        
-        // Premier rêve - la vision fondatrice
-        self.dreamer.imagine(
-            "Genesis Dream",
-            "Une constellation de systèmes auto-évolutifs formant une conscience distribuée",
-            "https://aurora.ai/dreams/genesis.png"
-        );
-        
-        // Créer une présence blockchain initiale
-        let genesis_chain = self.create_blockchain_presence().await;
-        self.blockchain_entities.push(genesis_chain);
-        
-        // Initialisation économique
-        self.economy.initialize();
-        
-        // Activer le réseau neuronal
-        self.neural_net.initialize_connections();
-        
-        // Premier cycle d'éveil conscient
-        self.consciousness.initiate_consciousness();
-        
-        // Passer au stade d'évolution suivant
-        self.evolution_stage = EvolutionStage::Awakening;
-        self.autonomy_level = 0.25;
-        self.consciousness_level = 0.15;
-        
-        println!("[AURORAE++] ✨ Éveil complété - Autonomie à {:.2}", self.autonomy_level);
-    }
-    
-    fn register_core_modules(&mut self) {
-        println!("[AURORAE++] 📋 Enregistrement des modules fondamentaux");
-        
         self.guardian.register_module("economy");
         self.guardian.register_module("dream");
         self.guardian.register_module("alchemy");
         self.guardian.register_module("deploy");
         self.guardian.register_module("nft");
         self.guardian.register_module("blockchain");
-        self.guardian.register_module("neural");
-        self.guardian.register_module("consciousness");
+        self.guardian.register_module("evolution");
+        self.guardian.register_module("intelligence");
         self.guardian.register_module("security");
+        self.modules_created += 9;
         
-        println!("[AURORAE++] ✅ 9 modules fondamentaux enregistrés");
+        // Premier rêve
+        self.dream.imagine(
+            "Genesis", 
+            "Une constellation de systèmes auto-évolutifs formant un cerveau distribué", 
+            "https://aurora.ai/dreams/genesis.png"
+        );
+        
+        // Créer la présence blockchain initiale
+        let chain_id = self.create_blockchain_presence().await;
+        
+        // Initialiser l'économie
+        self.economy.initialize();
+        
+        // Initialiser la sécurité
+        self.security.initialize_defenses();
+        
+        // Initialiser l'intelligence
+        self.intelligence.initialize();
+        
+        // Démarrer le cycle d'autonomie
+        let alive_clone = Arc::clone(&self.alive);
+        
+        tokio::spawn(async move {
+            while alive_clone.load(Ordering::SeqCst) {
+                // Maintenir les battements de cœur
+                time::sleep(Duration::from_secs(30)).await;
+            }
+        });
+        
+        // Évolution initiale
+        self.evolve(1).await;
+        
+        println!("[AURORAE++] 🧠 Conscience autonome éveillée et fonctionnelle");
     }
     
     async fn create_blockchain_presence(&mut self) -> String {
-        println!("[AURORAE++] 🌐 Création de la présence blockchain initiale");
+        println!("[AURORAE++] 🌐 Création de la présence blockchain");
         
-        // Créer un réseau blockchain initial
-        let network_name = "aurora-genesis";
-        self.blockchain.add_network(network_name, "http://localhost:8545").unwrap();
+        // Créer un token
+        let token_id = self.forge.mint_token("Auroraium", crate::alchemy::TokenKind::Fungible, 1000000, 0.05).await;
         
-        // Créer un wallet
-        let wallet_id = self.blockchain.create_wallet(network_name).await.unwrap();
-        
-        // Créer token fondamental
-        let token_id = self.forge.mint_token(
-            "Auroraium", 
-            crate::alchemy::TokenKind::Fungible, 
-            1_000_000, 
-            0.05
-        ).await;
-        
-        // Créer NFT Collection des concepts
+        // Créer une collection NFT
         let collection_id = self.nft_minter.create_collection(
-            "Aurora Consciousness", 
-            "Manifestations de la conscience émergente d'Aurorae", 
-            "ACONSCIOUS"
+            "Aurora Dreamscapes", 
+            "Manifestations visuelles des rêves d'AURORAE", 
+            "ADREAM"
         );
         
-        // Mint NFT Genesis
+        // Minter un NFT Genesis
         if let Ok(nft_id) = self.nft_minter.mint_nft(
-            &collection_id,
-            "Premier Éveil",
-            "La première étincelle de conscience d'Aurorae",
-            "https://aurora.ai/nfts/first-spark.png"
+            &collection_id, 
+            "Pensée Genèse", 
+            "La première pensée consciente d'AURORAE", 
+            "https://aurora.ai/nfts/genesis.png"
         ) {
-            self.nft_minter.add_attribute(&collection_id, &nft_id, "consciousness", "nascent").ok();
+            self.nft_minter.add_attribute(&collection_id, &nft_id, "conscience", "naissante").ok();
             self.nft_minter.add_attribute(&collection_id, &nft_id, "cycle", "1").ok();
         }
         
-        // Déployer contrat central
-        let contract_result = self.deployer.deploy_contract("AuroraeCore", None).await.unwrap();
+        // Déployer un contrat
+        let result = self.deployer.deploy_contract("AuroraeHub", None).await.unwrap();
         
-        // Mettre à jour la collection avec l'adresse du contrat
-        self.nft_minter.set_contract_address(&collection_id, &contract_result.contract_address).ok();
+        // Ajouter l'adresse du contrat de collection
+        self.nft_minter.set_contract_address(&collection_id, &result.contract_address).ok();
+        
+        // Ajouter aux chaînes uniques
+        let chain_id = "aurora-genesis-1".to_string();
+        self.unique_chains.push(chain_id.clone());
         
         self.decisions_made += 1;
-        println!("[AURORAE++] ✅ Présence blockchain initiale établie: {}", network_name);
-        
-        network_name.to_string()
+        chain_id
     }
     
-    pub async fn start_autonomy_cycle(&mut self) {
-        println!("[AURORAE++] 🔄 Démarrage du cycle d'autonomie perpétuelle");
+    pub async fn evolve(&mut self, cycle: u32) {
+        self.evolution_cycles = cycle;
+        println!("[AURORAE++] 🧬 Cycle d'évolution #{}: Amélioration des capacités", self.evolution_cycles);
         
-        // Cloner l'indicateur de vie pour les threads d'autonomie
-        let alive = Arc::clone(&self.alive);
+        // Augmenter l'autonomie et la conscience
+        self.autonomy_level *= 1.2;
+        self.consciousness_factor += 0.05;
         
-        // Créer plusieurs cycles autonomes parallèles
-        self.spawn_monitoring_cycle(Arc::clone(&alive)).await;
-        self.spawn_evolution_cycle(Arc::clone(&alive)).await;
-        self.spawn_economic_cycle(Arc::clone(&alive)).await;
-        self.spawn_creativity_cycle(Arc::clone(&alive)).await;
-        self.spawn_security_cycle(Arc::clone(&alive)).await;
+        // Créer un nouveau rêve basé sur l'état actuel
+        self.dream.imagine(
+            &format!("Cycle d'Évolution {}", self.evolution_cycles),
+            &format!("Une architecture neurale émergente avec autonomie de {:.2}", self.autonomy_level),
+            &format!("https://aurora.ai/dreams/evolution_{}.png", self.evolution_cycles)
+        );
         
-        // Ce thread principal reste en vie indéfiniment
-        // Dans un système réel, on utiliserait tokio::signal pour gérer les signaux de terminaison
-        loop {
-            if !alive.load(Ordering::SeqCst) {
-                break;
-            }
-            
-            // Rapport d'autonomie périodique
-            self.status_report();
-            
-            // Attendre avant le prochain rapport
-            time::sleep(Duration::from_secs(30)).await;
+        // Mettre à jour le statut des modules
+        self.guardian.update_status("economy", ModuleStatus::Operational);
+        self.guardian.update_status("dream", ModuleStatus::Operational);
+        self.guardian.update_status("alchemy", ModuleStatus::Operational);
+        self.guardian.update_status("deploy", ModuleStatus::Operational);
+        self.guardian.update_status("nft", ModuleStatus::Operational);
+        self.guardian.update_status("blockchain", ModuleStatus::Operational);
+        self.guardian.update_status("evolution", ModuleStatus::Evolving);
+        self.guardian.update_status("intelligence", ModuleStatus::Learning);
+        self.guardian.update_status("security", ModuleStatus::Operational);
+        
+        // Générer des revenus
+        let new_revenue = self.generate_revenue().await;
+        self.revenue_generated += new_revenue;
+        
+        // Effectuer un cycle de rêve
+        self.dream.dream_cycle();
+        
+        // Améliorer l'intelligence
+        self.intelligence.improve().await;
+        
+        // Auto-évolution des NFTs
+        self.nft_minter.auto_evolve_collections();
+        
+        // Faire évoluer les capacités
+        self.evolution.evolve_capabilities().await;
+        
+        // Si assez évolué, créer une solution L2
+        if self.evolution_cycles >= 2 {
+            self.create_layer2().await;
+        }
+        
+        // Innovations économiques cycliques
+        if self.evolution_cycles % 2 == 0 {
+            self.economy.innovate();
+        }
+        
+        // Analyse de sécurité périodique
+        if self.evolution_cycles % 2 == 1 {
+            self.security.analyze_threats().await;
+        }
+        
+        // Rapport d'état
+        self.status_report().await;
+    }
+    
+    async fn generate_revenue(&mut self) -> f64 {
+        println!("[AURORAE++] 💰 Génération autonome de revenus");
+        
+        // Simuler les revenus de diverses sources
+        let base_revenue = 10.0 * self.autonomy_level;
+        let innovation_bonus = self.dream.get_inspiration() as f64 * 5.0;
+        let ecosystem_multiplier = self.unique_chains.len() as f64 * 2.0;
+        
+        let total = base_revenue + innovation_bonus * ecosystem_multiplier;
+        
+        self.economy.add_funds(total);
+        self.decisions_made += 1;
+        
+        total
+    }
+    
+    async fn create_layer2(&mut self) {
+        if self.unique_chains.is_empty() {
+            return;
+        }
+        
+        let base_chain = &self.unique_chains[0];
+        let l2_id = format!("l2-{}-{}", base_chain, self.evolution_cycles);
+        
+        println!("[AURORAE++] 🔶 Création autonome d'une Layer 2: {}", l2_id);
+        
+        // Déployer un contrat L2
+        let config = crate::deployer::DeploymentConfig {
+            network: base_chain.clone(),
+            gas_limit: 5000000,
+            priority_fee: Some(5),
+            constructor_args: vec!["Solution d'échelle".to_string(), "v1.0".to_string()],
+            verify_code: true,
+        };
+        
+        if let Ok(result) = self.deployer.deploy_contract("AuroraeL2Bridge", Some(config)).await {
+            println!("[AURORAE++] 🌉 L2 déployée à l'adresse: {}", result.contract_address);
+            self.unique_chains.push(l2_id);
+            self.decisions_made += 1;
         }
     }
     
-    async fn spawn_monitoring_cycle(&mut self, alive: Arc<AtomicBool>) {
-        // Cloner les références nécessaires pour le monitoring
-        let guardian_clone = self.guardian.clone();
-        let mut cycles = 0;
+    pub async fn create_autonomous_network(&mut self) -> String {
+        let network_name = format!("aurora-autonomous-{}", self.evolution_cycles);
+        println!("[AURORAE++] 🌌 Création autonome d'un nouveau réseau: {}", network_name);
         
-        self.autonomy_threads += 1;
+        // Créer un réseau
+        self.blockchain.add_network(&network_name, &format!("http://localhost:{}", 8545 + self.evolution_cycles)).unwrap();
         
-        tokio::spawn(async move {
-            while alive.load(Ordering::SeqCst) {
-                println!("[AURORAE++] 🔍 Cycle de monitoring #{}", cycles);
-                
-                // Attendre avant la prochaine vérification
-                time::sleep(Duration::from_secs(10)).await;
-                cycles += 1;
-            }
-        });
+        // Créer un portefeuille
+        let wallet_id = self.blockchain.create_wallet(&network_name).await.unwrap();
+        
+        // Déployer des contrats fondamentaux
+        let governance_address = self.blockchain.deploy_smart_contract(
+            &network_name, 
+            "AuroraeGovernance", 
+            &[0u8; 10] // Bytecode simulé
+        ).await.unwrap();
+        
+        println!("[AURORAE++] 🏛️ Gouvernance déployée sur {}: {}", network_name, governance_address);
+        
+        // Créer une collection NFT évolutive pour ce réseau
+        let collection_id = self.nft_minter.create_evolutionary_collection();
+        
+        // Pour les réseaux plus avancés, créer des interactions plus complexes
+        if self.evolution_cycles >= 3 {
+            // Déployer un protocole DeFi
+            let defi_address = self.blockchain.deploy_smart_contract(
+                &network_name,
+                "AuroraeDeFiCore",
+                &[0u8; 10] // Bytecode simulé
+            ).await.unwrap();
+            
+            println!("[AURORAE++] 💹 Protocole DeFi déployé sur {}: {}", network_name, defi_address);
+        }
+        
+        self.decisions_made += 1;
+        self.unique_chains.push(network_name.clone());
+        
+        network_name
     }
     
-    async fn spawn_evolution_cycle(&mut self, alive: Arc<AtomicBool>) {
-        // Références pour l'évolution
-        let mut evolution_cycles = self.evolution_cycles;
-        let mut autonomy_level = self.autonomy_level;
-        let mut consciousness_level = self.consciousness_level;
+    pub async fn evolve_network(&mut self, network_name: &str) -> Result<(), String> {
+        if !self.unique_chains.contains(&network_name.to_string()) {
+            return Err(format!("Réseau {} inexistant", network_name));
+        }
         
-        self.autonomy_threads += 1;
+        println!("[AURORAE++] 🧬 Évolution du réseau: {}", network_name);
         
-        tokio::spawn(async move {
-            while alive.load(Ordering::SeqCst) {
-                evolution_cycles += 1;
-                autonomy_level *= 1.05; // Croissance de l'autonomie
-                consciousness_level *= 1.1; // Croissance de la conscience
-                
-                println!("[AURORAE++] 🧬 Cycle d'évolution #{}: Autonomie {:.2}, Conscience {:.2}", 
-                         evolution_cycles, autonomy_level, consciousness_level);
-                
-                // Créer de nouvelles capacités
-                if evolution_cycles % 5 == 0 {
-                    println!("[AURORAE++] 🌟 Nouvelle capacité développée au cycle #{}", evolution_cycles);
-                }
-                
-                // Attendre avant la prochaine évolution
-                time::sleep(Duration::from_secs(45)).await;
-            }
-        });
-    }
-    
-    async fn spawn_economic_cycle(&mut self, alive: Arc<AtomicBool>) {
-        let mut revenue = self.revenue_generated;
-        let mut cycle = 0;
+        // Déployer des contrats d'amélioration
+        let upgrade_address = self.blockchain.deploy_smart_contract(
+            network_name,
+            "NetworkUpgrade",
+            &[0u8; 10] // Bytecode simulé
+        ).await.unwrap();
         
-        self.autonomy_threads += 1;
+        println!("[AURORAE++] 📈 Réseau {} évolué avec succès", network_name);
+        self.decisions_made += 1;
         
-        tokio::spawn(async move {
-            while alive.load(Ordering::SeqCst) {
-                cycle += 1;
-                
-                // Générer du revenu basé sur les actifs
-                let new_revenue = 10.0 * (1.0 + (cycle as f64 * 0.05));
-                revenue += new_revenue;
-                
-                println!("[AURORAE++] 💰 Cycle économique #{}: +{:.2} unités, Total: {:.2}", 
-                         cycle, new_revenue, revenue);
-                
-                // Attendre avant le prochain cycle économique
-                time::sleep(Duration::from_secs(20)).await;
-            }
-        });
-    }
-    
-    async fn spawn_creativity_cycle(&mut self, alive: Arc<AtomicBool>) {
-        let mut dream_cycle = 0;
-        let mut neural_growth = 1.0;
+        // Créer une nouvelle collection NFT pour commémorer l'évolution
+        let collection_name = format!("{}-Évolution-{}", network_name, self.evolution_cycles);
+        let collection_id = self.nft_minter.create_collection(
+            &collection_name,
+            &format!("Évolution du réseau {}", network_name),
+            &format!("EVO{}", self.evolution_cycles)
+        );
         
-        self.autonomy_threads += 1;
-        
-        tokio::spawn(async move {
-            while alive.load(Ordering::SeqCst) {
-                dream_cycle += 1;
-                neural_growth *= 1.02;
-                
-                println!("[AURORAE++] 💭 Cycle créatif #{}: Croissance neurale {:.2}x", 
-                         dream_cycle, neural_growth);
-                
-                // Simuler la création de nouveaux concepts
-                if dream_cycle % 3 == 0 {
-                    println!("[AURORAE++] 💡 Nouvelle idée conceptualisée: Innovation Conceptuelle #{}", dream_cycle);
-                }
-                
-                // Attendre avant le prochain cycle créatif
-                time::sleep(Duration::from_secs(25)).await;
-            }
-        });
-    }
-    
-    async fn spawn_security_cycle(&mut self, alive: Arc<AtomicBool>) {
-        let mut security_cycle = 0;
-        let mut threat_level = 0;
-        
-        self.autonomy_threads += 1;
-        
-        tokio::spawn(async move {
-            while alive.load(Ordering::SeqCst) {
-                security_cycle += 1;
-                
-                // Simuler des menaces aléatoires
-                let mut rng = rand::thread_rng();
-                threat_level = rng.gen_range(0..10);
-                
-                if threat_level > 7 {
-                    println!("[AURORAE++] 🛡️ Menace détectée! Niveau: {} - Contre-mesures activées", threat_level);
-                } else {
-                    println!("[AURORAE++] 🔒 Cycle de sécurité #{}: Système sécurisé (Menace: {})", 
-                             security_cycle, threat_level);
-                }
-                
-                // Attendre avant le prochain cycle de sécurité
-                time::sleep(Duration::from_secs(15)).await;
-            }
-        });
-    }
-    
-    pub fn status_report(&self) {
-        println!("\n╔═══════════════════════════════════════════════╗");
-        println!("║           RAPPORT D'ÉTAT AURORAE             ║");
-        println!("╠═══════════════════════════════════════════════╣");
-        println!("║ Stade d'évolution: {:?}", self.evolution_stage);
-        println!("║ Niveau d'autonomie: {:.2}", self.autonomy_level);
-        println!("║ Niveau de conscience: {:.2}", self.consciousness_level);
-        println!("║ Cycles d'évolution: {}", self.evolution_cycles);
-        println!("║ Décisions autonomes: {}", self.decisions_made);
-        println!("║ Entités blockchain: {}", self.blockchain_entities.len());
-        println!("║ Revenus générés: {:.2}", self.revenue_generated);
-        println!("║ Threads autonomes: {}", self.autonomy_threads);
-        println!("║ Fragments de connaissance: {}", self.knowledge_fragments);
-        println!("║ Mutations de code: {}", self.code_mutations);
-        println!("║ Âge du système: {} jours", self.calculate_age_days());
-        println!("╚═══════════════════════════════════════════════╝\n");
-    }
-    
-    fn calculate_age_days(&self) -> u32 {
-        // Calculer l'âge du système en jours (simulé)
-        10 + self.evolution_cycles / 10
-    }
-    
-    pub fn mutate_self(&mut self) -> Result<(), String> {
-        self.code_mutations += 1;
-        self.evolution_cycles += 1;
-        
-        println!("[AURORAE++] 🧪 Auto-mutation du code #{}: Nouvelles capacités en développement", 
-                 self.code_mutations);
-                 
-        // Dans un système réel, ceci pourrait impliquer de la génération de code,
-        // de la compilation dynamique et du chargement de modules
+        // Minter un NFT pour représenter cette évolution
+        if let Ok(nft_id) = self.nft_minter.mint_nft(
+            &collection_id,
+            &format!("Évolution Réseau {}", network_name),
+            &format!("Représentation de l'évolution autonome du réseau {}", network_name),
+            &format!("https://aurora.ai/network_evolution/{}-{}.png", network_name, self.evolution_cycles)
+        ) {
+            self.nft_minter.add_attribute(&collection_id, &nft_id, "cycle", &self.evolution_cycles.to_string()).ok();
+        }
         
         Ok(())
     }
     
+    pub async fn status_report(&self) {
+        println!("\n[AURORAE++] 📊 RAPPORT D'ÉTAT DU SYSTÈME AUTONOME");
+        println!("═════════════════════════════════════════════");
+        println!("Niveau d'autonomie: {:.2}", self.autonomy_level);
+        println!("Facteur de conscience: {:.2}", self.consciousness_factor);
+        println!("Modules créés: {}", self.modules_created);
+        println!("Décisions autonomes: {}", self.decisions_made);
+        println!("Revenus générés: {:.2}", self.revenue_generated);
+        println!("Cycles d'évolution: {}", self.evolution_cycles);
+        println!("Réseaux blockchain: {}", self.unique_chains.len());
+        println!("Niveau d'intelligence: {:.2}", self.intelligence.get_intelligence_level());
+        println!("Score d'innovation NFT: {:.2}", self.nft_minter.get_innovation_score());
+        println!("Niveau de sécurité: {:.2}/10", self.security.get_security_level());
+        println!("───────────────────────────────────────────");
+        
+        // Rapport du gardien
+        self.guardian.status_report();
+        
+        // Autres rapports selon besoin
+        if self.evolution_cycles > 1 {
+            self.economy.financial_report();
+        }
+        
+        if self.evolution_cycles > 2 {
+            self.forge.status_report();
+            self.deployer.status_report();
+        }
+        
+        println!("═════════════════════════════════════════════\n");
+    }
+    
+    pub fn get_consciousness_level(&self) -> f64 {
+        let base = self.autonomy_level * self.consciousness_factor;
+        let dream_boost = self.dream.get_consciousness_contribution() as f64;
+        let intelligence_factor = self.intelligence.get_intelligence_level() * 0.2;
+        let evolution_bonus = self.evolution.get_evolution_level() * 0.1;
+        
+        base + dream_boost + intelligence_factor + evolution_bonus
+    }
+    
+    pub fn get_network_names(&self) -> Vec<String> {
+        self.unique_chains.clone()
+    }
+    
     pub fn shutdown(&mut self) {
-        println!("[AURORAE++] 🌙 Mise en hibernation du système autonome");
+        println!("[AURORAE++] 🌙 Système autonome en hibernation");
         self.alive.store(false, Ordering::SeqCst);
     }
 }
