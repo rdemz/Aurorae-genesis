@@ -1,10 +1,3 @@
-
-//! AURORAE++ - economy.rs
-//!
-//! Ce module gère l'économie interne de l'IA : création de valeur, flux, récompenses, et reversements
-//! Il interagit directement avec `founder_income` pour garantir la rétribution du créateur originel.
-
-use std::collections::HashMap;
 use chrono::Utc;
 use crate::founder_income::reward_founder;
 
@@ -52,7 +45,7 @@ impl EconomyEngine {
     pub fn summarize(&self) {
         println!("[AURORAE++] 🌐 TOTAL GÉNÉRÉ : {:.4} tokens", self.total_generated);
         for (i, c) in self.cycles.iter().enumerate() {
-            println!("→ Cycle {} • {} tokens créés • {:.2} au fondateur", i+1, c.generated_tokens, c.sent_to_founder);
+            println!("→ Cycle {} • {} tokens créés • {:.2} au fondateur", i + 1, c.generated_tokens, c.sent_to_founder);
         }
     }
 
