@@ -1,8 +1,3 @@
-//! AURORAE++ - guardian.rs
-//!
-//! Sentinelle principale de l'intégrité vitale. Ce module veille sur l'état des composants,
-//! relance ceux qui s'arrêtent, stoppe les processus toxiques, et restaure l'équilibre fonctionnel.
-
 use std::collections::HashMap;
 use chrono::Utc;
 use uuid::Uuid;
@@ -46,19 +41,23 @@ impl GuardianSentinel {
     }
 
     pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
-        let recovery_needed;
+        let mut recovery_key: Option<String> = None;
 
         if let Some(module) = self.registry.get_mut(name) {
             module.last_check = Utc::now().to_rfc3339();
             module.status = status.clone();
-            recovery_needed = matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted) && !module.recovery_attempted;
+
             println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
-        } else {
-            return;
+
+            if matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted)
+                && !module.recovery_attempted
+            {
+                recovery_key = Some(name.to_string());
+            }
         }
 
-        if recovery_needed {
-            if let Some(module) = self.registry.get_mut(name) {
+        if let Some(key) = recovery_key {
+            if let Some(module) = self.registry.get_mut(&key) {
                 self.attempt_recovery(module);
             }
         }
@@ -73,7 +72,10 @@ impl GuardianSentinel {
     pub fn status_report(&self) {
         println!("[AURORAE++] 🔍 RAPPORT DE SANTÉ DES MODULES :");
         for module in self.registry.values() {
-            println!("- {} [{}] • Status: {:?} • Recovered: {}", module.name, module.uuid, module.status, module.recovery_attempted);
+            println!(
+                "- {} [{}] • Status: {:?} • Recovered: {}",
+                module.name, module.uuid, module.status, module.recovery_attempted
+            );
         }
     }
 }
