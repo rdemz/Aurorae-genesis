@@ -46,12 +46,19 @@ impl GuardianSentinel {
     }
 
     pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
+        let recovery_needed;
+
         if let Some(module) = self.registry.get_mut(name) {
             module.last_check = Utc::now().to_rfc3339();
             module.status = status.clone();
+            recovery_needed = matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted) && !module.recovery_attempted;
             println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
+        } else {
+            return;
+        }
 
-            if matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted) && !module.recovery_attempted {
+        if recovery_needed {
+            if let Some(module) = self.registry.get_mut(name) {
                 self.attempt_recovery(module);
             }
         }
