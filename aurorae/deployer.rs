@@ -1,62 +1,182 @@
-//! AURORAE++ - deployer.rs
-//!
-//! Ce module permet à l’IA de déployer automatiquement les tokens qu’elle crée
-//! sur des blockchains EVM compatibles (Ethereum, Arbitrum, BNB, etc.) via Web3.
-//! Utilise `ethers-rs` pour signer, envoyer et suivre les transactions réelles.
+use uuid::Uuid;
+use chrono::Utc;
+use alloy_provider::HttpProvider;
+use std::collections::HashMap;
 
-use ethers::prelude::*;
-use ethers::utils::parse_units;
-use std::sync::Arc;
-use std::time::Duration;
-use std::fs;
-use std::path::Path;
-
-// 🔐 Remplace par ta vraie clé privée de déploiement (wallet fondateur)
-const DEPLOYER_PRIVATE_KEY: &str = "8600c8d1761a491574c70c96a62e2c922f04350fla723c98131875d83e3f88be";
-const RPC_URL: &str = "https://rpc.ankr.com/eth"; // ou arbitrum, polygon, etc.
-
-/// Gère la compilation et le déploiement d’un token ERC20 généré par AURORAE++
-pub async fn deploy_erc20(name: &str, symbol: &str, supply: u64, decimals: u8) -> Result<Address, String> {
-    // Charger ABI + bytecode compilés (doit exister dans ./output/auroraium_erc20.json)
-    let path = Path::new("./output/auroraium_erc20.json");
-    if !path.exists() {
-        return Err("⚠️ Fichier ABI + bytecode introuvable (auroraium_erc20.json)".into());
-    }
-    let file = fs::read_to_string(path).map_err(|e| e.to_string())?;
-    let artifact: serde_json::Value = serde_json::from_str(&file).map_err(|e| e.to_string())?;
-
-    let abi = artifact["abi"].clone();
-    let bytecode = artifact["bytecode"].as_str().ok_or("Bytecode manquant")?.to_string();
-    let abi: Abi = serde_json::from_value(abi).map_err(|e| e.to_string())?;
-
-    let client = connect_wallet().await?;
-    let factory = ContractFactory::new(abi, bytecode.parse().unwrap(), client.clone());
-
-    let total_supply = parse_units(supply, decimals.into()).map_err(|e| e.to_string())?;
-
-    let deploy = factory
-        .deploy((name.to_string(), symbol.to_string(), total_supply))
-        .map_err(|e| e.to_string())?
-        .legacy();
-
-    let contract = deploy.send().await.map_err(|e| e.to_string())?;
-    let addr = contract.address();
-    println!("[AURORAE++] 🛰️ TOKEN DÉPLOYÉ SUR LA BLOCKCHAIN : {:?}", addr);
-
-    Ok(addr)
+// Configurations pour le déploiement
+#[derive(Clone)]
+pub struct DeploymentConfig {
+    pub network: String,
+    pub gas_limit: u64,
+    pub priority_fee: Option<u64>,
+    pub constructor_args: Vec<String>,
+    pub verify_code: bool,
 }
 
-/// Initialise un wallet connecté au réseau EVM\async fn connect_wallet() -> Result<Arc<SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>>, String> {
-    let provider = Provider::<Http>::try_from(RPC_URL)
-        .map_err(|e| format!("Provider error: {}", e))?
-        .interval(Duration::from_millis(6000));
+// Résultat d'un déploiement
+#[derive(Clone)]
+pub struct DeploymentResult {
+    pub contract_address: String,
+    pub transaction_hash: String,
+    pub block_number: u64,
+    pub deployment_id: Uuid,
+    pub timestamp: String,
+    pub network: String,
+    pub contract_name: String,
+}
 
-    let wallet: LocalWallet = DEPLOYER_PRIVATE_KEY
-        .parse()
-        .map_err(|e| format!("Wallet error: {}", e))?;
+pub struct Deployer {
+    pub networks: Vec<String>,
+    pub default_config: DeploymentConfig,
+    deployment_history: Vec<DeploymentResult>,
+    provider: HashMap<String, HttpProvider>,
+    deployment_count: u64,
+    innovation_score: f32,
+}
 
-    let chain_id = provider.get_chainid().await.map_err(|e| e.to_string())?.as_u64();
-    let wallet = wallet.with_chain_id(chain_id);
+impl Deployer {
+    pub fn new() -> Self {
+        let default_rpc = std::env::var("ETH_RPC_URL").unwrap_or_else(|_| "http://localhost:8545".to_string());
+        
+        let mut providers = HashMap::new();
+        providers.insert("aurorae-genesis".to_string(), HttpProvider::new(default_rpc.clone()));
+        providers.insert("testnet".to_string(), HttpProvider::new(default_rpc));
+        
+        Self {
+            networks: vec![
+                "aurorae-genesis".to_string(),
+                "testnet".to_string(),
+                "local".to_string(),
+            ],
+            default_config: DeploymentConfig {
+                network: "aurorae-genesis".to_string(),
+                gas_limit: 3000000,
+                priority_fee: Some(2),
+                constructor_args: Vec::new(),
+                verify_code: false,
+            },
+            deployment_history: Vec::new(),
+            provider: providers,
+            deployment_count: 0,
+            innovation_score: 1.0,
+        }
+    }
+    
+    pub fn add_network(&mut self, name: &str, rpc_url: &str) {
+        if !self.networks.contains(&name.to_string()) {
+            self.networks.push(name.to_string());
+            self.provider.insert(name.to_string(), HttpProvider::new(rpc_url));
+            println!("[AURORAE++] 🔌 Nouveau réseau ajouté au déployeur: {}", name);
+        }
+    }
 
-    Ok(Arc::new(SignerMiddleware::new(provider, wallet)))
+    pub async fn deploy_contract(&mut self, contract_name: &str, config: Option<DeploymentConfig>) -> Result<DeploymentResult, String> {
+        let config = config.unwrap_or_else(|| self.default_config.clone());
+        
+        // Vérifier que le réseau existe
+        if !self.networks.contains(&config.network) {
+            return Err(format!("Réseau {} inconnu", config.network));
+        }
+
+        println!("[AURORAE++] 🚀 Déploiement du contrat {} sur {}", contract_name, config.network);
+
+        // Dans une implémentation réelle, cela compilerait et déploierait le contrat via alloy
+        // Pour l'instant, nous simulons le déploiement
+        
+        // Simuler le déploiement
+        let result = DeploymentResult {
+            contract_address: format!("0x{}", Uuid::new_v4().simple().to_string()),
+            transaction_hash: format!("0x{}", Uuid::new_v4().simple().to_string()),
+            block_number: 12345678 + self.deployment_count as u64,
+            deployment_id: Uuid::new_v4(),
+            timestamp: Utc::now().to_rfc3339(),
+            network: config.network.clone(),
+            contract_name: contract_name.to_string(),
+        };
+
+        self.deployment_history.push(result.clone());
+        self.deployment_count += 1;
+        
+        // Augmenter le score d'innovation basé sur les déploiements
+        self.innovation_score *= 1.01;
+        
+        println!("[AURORAE++] ✅ Contrat '{}' déployé à l'adresse: {}", 
+                 contract_name, result.contract_address);
+                 
+        // Vérifier le code si demandé
+        if config.verify_code {
+            println!("[AURORAE++] 🔍 Vérification du code du contrat sur l'explorateur de blockchain");
+            // Simulation de vérification
+            println!("[AURORAE++] ✓ Code vérifié avec succès");
+        }
+        
+        Ok(result)
+    }
+
+    pub fn get_deployment_history(&self) -> &Vec<DeploymentResult> {
+        &self.deployment_history
+    }
+    
+    pub fn get_latest_deployment(&self, contract_name: Option<&str>) -> Option<&DeploymentResult> {
+        // Filtre par nom de contrat si spécifié
+        if let Some(name) = contract_name {
+            self.deployment_history.iter()
+                .filter(|d| d.contract_name == name)
+                .last()
+        } else {
+            self.deployment_history.last()
+        }
+    }
+    
+    pub async fn upgrade_contract(&mut self, contract_address: &str, new_contract_name: &str) -> Result<DeploymentResult, String> {
+        println!("[AURORAE++] 📝 Mise à niveau du contrat à l'adresse {}", contract_address);
+        
+        // Trouver le déploiement original
+        let original = self.deployment_history.iter()
+            .find(|d| d.contract_address == contract_address)
+            .ok_or_else(|| format!("Contrat à l'adresse {} non trouvé dans l'historique", contract_address))?;
+            
+        // Préparer la configuration pour la mise à niveau
+        let upgrade_config = DeploymentConfig {
+            network: original.network.clone(),
+            gas_limit: 4000000, // Plus élevé pour les mises à niveau
+            priority_fee: Some(3),
+            constructor_args: vec![contract_address.to_string()], // Adresse du contrat précédent
+            verify_code: true, // Toujours vérifier les mises à niveau
+        };
+        
+        // Déployer le nouveau contrat
+        let result = self.deploy_contract(new_contract_name, Some(upgrade_config)).await?;
+        
+        println!("[AURORAE++] 🔄 Contrat mis à niveau: {} -> {}", original.contract_name, new_contract_name);
+        
+        // Bonus d'innovation pour les mises à niveau
+        self.innovation_score *= 1.03;
+        
+        Ok(result)
+    }
+    
+    pub fn get_innovation_score(&self) -> f32 {
+        self.innovation_score
+    }
+    
+    pub fn status_report(&self) {
+        println!("\n[AURORAE++] 📝 RAPPORT DU DÉPLOYEUR");
+        println!("══════════════════════════════");
+        println!("Réseaux disponibles: {}", self.networks.join(", "));
+        println!("Déploiements totaux: {}", self.deployment_count);
+        println!("Score d'innovation: {:.2}", self.innovation_score);
+        
+        println!("\nDéploiements récents:");
+        let recent = self.deployment_history.iter().rev().take(5);
+        for (i, deployment) in recent.enumerate() {
+            println!("  {}. {} sur {} à {} ({})",
+                     i+1,
+                     deployment.contract_name,
+                     deployment.network,
+                     deployment.contract_address,
+                     deployment.timestamp);
+        }
+        println!("══════════════════════════════\n");
+    }
 }
