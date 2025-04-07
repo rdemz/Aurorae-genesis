@@ -1,7 +1,3 @@
-//! AURORAE++ - economy.rs
-//!
-//! Ce module gère la simulation économique, les flux de valeur, et la génération de tokens vivants.
-
 use chrono::Utc;
 use crate::founder_income::reward_founder;
 use crate::alchemy::{AlchemyEngine, TokenKind};
@@ -36,7 +32,7 @@ impl EconomyEngine {
         let to_founder = value_created * self.founder_percentage;
         let to_ai = value_created - to_founder;
 
-        reward_founder(to_founder as u64);
+        reward_founder(to_founder);
 
         let cycle = EconomicCycle {
             timestamp: Utc::now().to_rfc3339(),
@@ -51,7 +47,6 @@ impl EconomyEngine {
         println!("[AURORAE++] 🌐 TOTAL GÉNÉRÉ : {:.4} tokens", self.total_generated);
         println!("→ Cycle {} • {:.0} tokens créés • {:.2} au fondateur", self.cycles.len(), value_created, to_founder);
 
-        // ✅ Déclencher une forge de token Auroraium à chaque cycle
         self.alchemy
             .mint_token("Auroraium", TokenKind::Fungible, value_created as u64, self.founder_percentage)
             .await;
