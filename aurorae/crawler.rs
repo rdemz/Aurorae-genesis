@@ -8,7 +8,7 @@ use std::path::Path;
 use std::fs;
 
 /// Configuration du chemin d'extraction locale
-default const FEED_PATH: &str = "./github_feed";
+const FEED_PATH: &str = "C:\\Users\\admin\\.github_feed";
 
 /// Clone un dépôt GitHub donné vers le dossier local `github_feed/<nom>`
 pub fn clone_repo(repo_url: &str) -> Result<(), String> {
