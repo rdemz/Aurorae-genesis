@@ -26,7 +26,9 @@ pub struct GuardianSentinel {
 
 impl GuardianSentinel {
     pub fn new() -> Self {
-        Self { registry: HashMap::new() }
+        Self {
+            registry: HashMap::new(),
+        }
     }
 
     pub fn register_module(&mut self, name: &str) {
@@ -40,30 +42,37 @@ impl GuardianSentinel {
         self.registry.insert(name.to_string(), module);
     }
 
-pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
-    let mut recovery_needed = false;
+    pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
+        let recovery_needed;
 
-    if let Some(module) = self.registry.get_mut(name) {
-        module.last_check = Utc::now().to_rfc3339();
-        module.status = status.clone();
-        println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
-
-        if matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted)
-            && !module.recovery_attempted
         {
-            recovery_needed = true;
+            // Emprunt limité à ce bloc
+            let module = self.registry.get_mut(name);
+            if let Some(module) = module {
+                module.last_check = Utc::now().to_rfc3339();
+                module.status = status.clone();
+                println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
+
+                recovery_needed = matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted)
+                    && !module.recovery_attempted;
+            } else {
+                return;
+            }
+        }
+
+        // Nouveau scope → nouvel emprunt possible
+        if recovery_needed {
+            if let Some(module) = self.registry.get_mut(name) {
+                self.attempt_recovery(module);
+            }
         }
     }
 
-    // ✅ On fait une 2e emprunt uniquement ici
-    if recovery_needed {
-        if let Some(module) = self.registry.get_mut(name) {
-            self.attempt_recovery(module);
-        }
-    }
-}
     pub fn attempt_recovery(&mut self, module: &mut MonitoredModule) {
-        println!("[AURORAE++] 🚑 Tentative de récupération pour module : {}", module.name);
+        println!(
+            "[AURORAE++] 🚑 Tentative de récupération pour module : {}",
+            module.name
+        );
         module.recovery_attempted = true;
         module.status = ModuleStatus::Operational;
     }
