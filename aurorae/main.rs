@@ -19,6 +19,7 @@ mod genome;
 mod explorer;
 mod founder_income;
 mod engine;
+mod deployer;
 
 use engine::AuroraeEngine;
 
