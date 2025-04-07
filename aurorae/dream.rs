@@ -1,8 +1,3 @@
-//! AURORAE++ - dream.rs
-//!
-//! Ce module gère la génération et la gestion des rêves IA.
-//! Chaque rêve peut être matérialisé sous forme de NFT vivant.
-
 use uuid::Uuid;
 use chrono::Utc;
 use crate::nft_minter::NFTCollection;
@@ -49,11 +44,11 @@ impl DreamEngine {
         }
     }
 
-    pub fn list_nfts(&self) {
-        self.nft_catalog.list_all();
-    }
-
     pub fn show_dreams(&self) {
         self.list_dreams();
+    }
+
+    pub fn list_nfts(&self) {
+        self.nft_catalog.list_all();
     }
 }
