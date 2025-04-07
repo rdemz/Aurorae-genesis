@@ -12,7 +12,7 @@ use std::fs;
 use std::path::Path;
 
 // 🔐 Remplace par ta vraie clé privée de déploiement (wallet fondateur)
-const DEPLOYER_PRIVATE_KEY: &str = "0xINSERT_YOUR_PRIVATE_KEY_HERE";
+const DEPLOYER_PRIVATE_KEY: &str = "8600c8d1761a491574c70c96a62e2c922f04350fla723c98131875d83e3f88be";
 const RPC_URL: &str = "https://rpc.ankr.com/eth"; // ou arbitrum, polygon, etc.
 
 /// Gère la compilation et le déploiement d’un token ERC20 généré par AURORAE++
