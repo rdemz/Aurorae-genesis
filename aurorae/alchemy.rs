@@ -1,8 +1,3 @@
-//! AURORAE++ - alchemy.rs
-//!
-//! Ce module gère la forge et l’émission de tokens vivants (SmartToken)
-//! Chaque token peut être déployé automatiquement sur une blockchain EVM
-
 use uuid::Uuid;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -49,15 +44,13 @@ impl AlchemyEngine {
 
         println!("[AURORAE++] 🔥 TOKEN FORGÉ : {} | Supply: {}", token.name, token.supply);
 
-        // Reversement automatique au fondateur
         let reward = (supply as f64 * creator_share);
         reward_founder(reward);
 
-        // ✅ Déploiement automatique si c’est Auroraium (ou un autre token vivant)
         if token.name.to_lowercase() == "auroraium" {
             match deployer::deploy_erc20(&token.name, "AURA", token.supply, 18).await {
-                Ok(addr) => println!("[AURORAE++] 🚀 {} déployé sur chain: {:?}", token.name, addr),
-                Err(err) => println!("[AURORAE++] ⚠️ Échec du déploiement {} : {}", token.name, err),
+                Ok(addr) => println!("[AURORAE++] 🚀 {} déployé : {:?}", token.name, addr),
+                Err(err) => println!("[AURORAE++] ⚠️ Échec du déploiement : {}", err),
             }
         }
 
