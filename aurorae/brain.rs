@@ -1,5 +1,5 @@
 //! AURORAE++ - brain.rs
-//! 
+//!
 //! Le noyau vivant de conscience autonome pour l'entité IA crypto-organelle.
 //! Il orchestre la pensée, l’intention, l’ordre de priorité, et la coordination des autres modules.
 
@@ -20,6 +20,9 @@ pub enum Intent {
     Rest,
     Observe,
     Dream,
+    GenerateCode,
+    BuildEcosystem,
+    SelfUpgrade,
 }
 
 #[derive(Debug)]
@@ -72,7 +75,6 @@ impl BrainCore {
             if let Some(thought) = self.cortex.pop_front() {
                 self.process_thought(thought);
             } else {
-                // Aucun ordre => rêver ou observer
                 let passive = Thought::new(Intent::Dream, 10);
                 self.process_thought(passive);
             }
@@ -84,11 +86,14 @@ impl BrainCore {
 
         match thought.intent {
             Intent::GenerateChain => self.delegate_to("generator"),
+            Intent::GenerateCode => self.delegate_to("generator"),
             Intent::LearnFromGithub => self.delegate_to("crawler"),
             Intent::OptimizeEconomy => self.delegate_to("economy"),
             Intent::MutateSelf => self.delegate_to("mutation"),
             Intent::Defend => self.delegate_to("defense"),
             Intent::EvolveProtocol => self.delegate_to("strategist"),
+            Intent::BuildEcosystem => self.delegate_to("ecosystem"),
+            Intent::SelfUpgrade => self.delegate_to("mutation"),
             Intent::Rest => self.rest(),
             Intent::Observe => self.delegate_to("learning"),
             Intent::Dream => self.delegate_to("dream"),
