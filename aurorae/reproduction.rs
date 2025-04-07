@@ -41,7 +41,7 @@ impl ReproductionEngine {
     }
 
     pub fn list_instances(&self) {
-        println!("[AURORAE++] 🌱 ENFANTS ACTIFS : {}");
+        println!("[AURORAE++] 🌱 ENFANTS ACTIFS : {}", self.children.len());
         for i in &self.children {
             println!("- {} • Purpose: {} • Modules: {:?}", i.id, i.purpose, i.inherited_modules);
         }
