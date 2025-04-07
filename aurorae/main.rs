@@ -20,6 +20,7 @@ mod explorer;
 mod founder_income;
 mod engine;
 mod deployer;
+mod nft_minter;
 
 use engine::AuroraeEngine;
 
