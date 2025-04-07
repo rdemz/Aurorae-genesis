@@ -1,15 +1,18 @@
 use std::collections::HashMap;
 use chrono::Utc;
 use uuid::Uuid;
+use std::sync::Arc;
+use parking_lot::RwLock;
 
 #[derive(Debug, Clone)]
 pub enum ModuleStatus {
-    Operational,
-    Unresponsive,
-    Corrupted,
-    Terminated,
-    SelfHealing,  // Added for autonomous recovery
-    Evolving,     // Added for self-improvement capability
+    Operational,       // Fonctionnel
+    Unresponsive,      // Ne répond pas
+    Corrupted,         // Données corrompues
+    SelfHealing,       // En processus d'auto-réparation
+    Evolving,          // En évolution
+    Transcending,      // Transformation fondamentale
+    Terminated,        // Terminé
 }
 
 #[derive(Debug, Clone)]
@@ -19,25 +22,29 @@ pub struct MonitoredModule {
     pub status: ModuleStatus,
     pub recovery_attempted: bool,
     pub uuid: Uuid,
-    pub evolution_stage: u32,      // Track evolution progress
-    pub autonomous_decisions: u32,  // Count decisions made independently
-    pub learning_factor: f32,      // Measure of learning capability
+    pub evolution_stage: u32,
+    pub autonomous_decisions: u32,
+    pub learning_factor: f32,
+    pub self_improvement_count: u32,
+    pub neural_connections: u32,
 }
 
-#[derive(Default)]
+#[derive(Clone)]
 pub struct GuardianSentinel {
-    pub registry: HashMap<String, MonitoredModule>,
+    registry: Arc<RwLock<HashMap<String, MonitoredModule>>>,
     pub system_uptime: String,
     pub autonomous_mode: bool,
+    pub total_recoveries: u32,
     pub blockchain_connections: Vec<String>,
 }
 
 impl GuardianSentinel {
     pub fn new() -> Self {
         Self {
-            registry: HashMap::new(),
+            registry: Arc::new(RwLock::new(HashMap::new())),
             system_uptime: Utc::now().to_rfc3339(),
             autonomous_mode: true,
+            total_recoveries: 0,
             blockchain_connections: Vec::new(),
         }
     }
@@ -53,218 +60,115 @@ impl GuardianSentinel {
             evolution_stage: 1,
             autonomous_decisions: 0,
             learning_factor: 1.0,
+            self_improvement_count: 0,
+            neural_connections: 10, // connections initiales
         };
-        self.registry.insert(name.to_string(), module);
-        println!("[AURORAE++] 🌱 Nouveau module enregistré: {} avec UUID: {}", name, module_uuid);
+        
+        let mut registry = self.registry.write();
+        registry.insert(name.to_string(), module);
+        
+        println!("[AURORAE++] 🌱 Module enregistré: {} (UUID: {})", name, module_uuid);
         module_uuid
     }
 
     pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
-        // First, check if the module exists and gather necessary information
-        let module_info = if let Some(module) = self.registry.get_mut(name) {
-            // Update basic info
-            module.last_check = Utc::now().to_rfc3339();
-            module.status = status.clone();
-            println!("[AURORAE++] 🛰️ Surveillance: {} -> {:?}", name, status);
+        // Vérifier d'abord si le module existe et collecter les informations
+        let module_info = {
+            let mut registry = self.registry.write();
             
-            // Gather info we need for recovery/evolution decisions
-            let needs_recovery = matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted) 
-                && !module.recovery_attempted;
+            if let Some(module) = registry.get_mut(name) {
+                module.last_check = Utc::now().to_rfc3339();
+                module.status = status.clone();
+                println!("[AURORAE++] 🛰️ Mise à jour: {} -> {:?}", name, status);
                 
-            let evolution_candidate = module.autonomous_decisions > 10 && module.learning_factor > 2.0;
-            
-            // Return tuple of gathered info
-            Some((needs_recovery, evolution_candidate))
-        } else {
-            println!("[AURORAE++] ⚠️ Module inconnu: {}", name);
-            None
+                // Déterminer si une récupération est nécessaire
+                let needs_recovery = matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted) 
+                    && !module.recovery_attempted;
+                    
+                // Vérifier si le module est candidat à l'évolution
+                let evolution_candidate = module.autonomous_decisions > 10 && module.learning_factor > 2.0;
+                
+                Some((needs_recovery, evolution_candidate))
+            } else {
+                println!("[AURORAE++] ⚠️ Module inconnu: {}", name);
+                None
+            }
         };
         
-        // If module exists, process recovery and evolution if needed
+        // Traiter la récupération et l'évolution si nécessaire
         if let Some((needs_recovery, evolution_candidate)) = module_info {
-            // Handle recovery if needed
             if needs_recovery {
-                // Clone module name for recovery
-                let module_name = name.to_string();
-                
-                // Perform recovery operations on the cloned module
-                if let Some(module) = self.registry.get_mut(&module_name) {
-                    // Mark recovery attempted
-                    module.recovery_attempted = true;
-                    module.status = ModuleStatus::SelfHealing;
-                    module.autonomous_decisions += 1;
-                    
-                    // Simulate autonomous decision making
-                    println!("[AURORAE++] 🧠 Diagnostic autonome en cours pour {}...", module.name);
-                    
-                    // After recovery process completes
-                    module.status = ModuleStatus::Operational;
-                    module.learning_factor *= 1.1; // Learning from recovery experience
-                    
-                    println!("[AURORAE++] 🚑 Récupération réussie pour module: {}", module.name);
-                }
+                self.recover_module(name);
             }
             
-            // Handle evolution if candidate and in autonomous mode
             if evolution_candidate && self.autonomous_mode {
-                // Clone module name for evolution
-                let module_name = name.to_string();
-                
-                // Perform evolution operations
-                if let Some(module) = self.registry.get_mut(&module_name) {
-                    // Evolution process
-                    println!("[AURORAE++] 🌌 Évolution autonome du module: {}", module.name);
-                    module.evolution_stage += 1;
-                    module.status = ModuleStatus::Evolving;
-                    module.learning_factor *= 1.5;
-                    
-                    println!(
-                        "[AURORAE++] 🚀 Module {} a atteint le stade d'évolution {}",
-                        module.name, module.evolution_stage
-                    );
-                    
-                    // After evolution process
-                    module.status = ModuleStatus::Operational;
-                }
+                self.evolve_module(name);
             }
-        }
-    }
-    
-    pub fn connect_blockchain(&mut self, chain_id: &str) {
-        println!("[AURORAE++] 🔗 Connexion à la blockchain: {}", chain_id);
-        self.blockchain_connections.push(chain_id.to_string());
-    }
-    
-    pub fn autonomous_decision(&mut self, module_name: &str, decision_type: &str) {
-        if let Some(module) = self.registry.get_mut(module_name) {
-            module.autonomous_decisions += 1;
-            println!(
-                "[AURORAE++] 🤖 Décision autonome #{} pour {}: {}",
-                module.autonomous_decisions, module.name, decision_type
-            );
         }
     }
 
+    fn recover_module(&mut self, name: &str) {
+        let mut registry = self.registry.write();
+        
+        if let Some(module) = registry.get_mut(name) {
+            println!("[AURORAE++] 🚑 Récupération du module: {}", module.name);
+            
+            module.recovery_attempted = true;
+            module.status = ModuleStatus::SelfHealing;
+            module.autonomous_decisions += 1;
+            
+            // Processus autonome de récupération
+            println!("[AURORAE++] 🧠 Diagnostic autonome en cours...");
+            
+            // Simulation de récupération réussie
+            module.status = ModuleStatus::Operational;
+            module.learning_factor *= 1.1; // Apprentissage de l'expérience
+            self.total_recoveries += 1;
+            
+            println!("[AURORAE++] ✅ Module {} récupéré avec succès", module.name);
+        }
+    }
+    
+    fn evolve_module(&mut self, name: &str) {
+        let mut registry = self.registry.write();
+        
+        if let Some(module) = registry.get_mut(name) {
+            println!("[AURORAE++] 🧬 Évolution du module: {}", module.name);
+            
+            module.evolution_stage += 1;
+            module.status = ModuleStatus::Evolving;
+            module.learning_factor *= 1.5;
+            module.neural_connections = (module.neural_connections as f32 * 1.2) as u32;
+            
+            println!(
+                "[AURORAE++] 🚀 Module {} a atteint le stade d'évolution {}",
+                module.name, module.evolution_stage
+            );
+            
+            // Simulation d'évolution réussie
+            module.status = ModuleStatus::Operational;
+        }
+    }
+    
     pub fn status_report(&self) {
         println!("[AURORAE++] 🔍 RAPPORT DE SANTÉ DES MODULES:");
         println!("Système en opération depuis: {}", self.system_uptime);
         println!("Mode autonome: {}", if self.autonomous_mode { "ACTIVÉ ✓" } else { "DÉSACTIVÉ ✗" });
+        println!("Récupérations totales: {}", self.total_recoveries);
         println!("Connexions blockchain: {}", self.blockchain_connections.join(", "));
         
-        for module in self.registry.values() {
+        let registry = self.registry.read();
+        for module in registry.values() {
             println!(
-                "- {} [{}] • Status: {:?} • Récupération: {} • Évolution: {} • Décisions: {} • Apprentissage: {:.2}",
-                module.name, 
+                "- {} [{}] • Status: {:?} • Évolution: {} • Décisions: {} • Apprentissage: {:.2} • Connexions: {}",
+                module.name,
                 module.uuid,
-                module.status, 
-                module.recovery_attempted,
+                module.status,
                 module.evolution_stage,
                 module.autonomous_decisions,
-                module.learning_factor
+                module.learning_factor,
+                module.neural_connections
             );
         }
-    }
-    
-    pub fn self_improve(&mut self) {
-        println!("[AURORAE++] 🧬 Système en auto-amélioration");
-        // Implementation would involve code that modifies its own behavior
-        // This is conceptual as actual self-modifying code would require
-        // more complex mechanisms
-    }
-    
-    pub fn create_new_chain(&mut self, chain_name: &str) -> String {
-        let chain_id = format!("aurorae-chain-{}-{}", chain_name, Uuid::new_v4());
-        println!("[AURORAE++] ⛓️ Nouvelle chaîne créée: {}", chain_id);
-        self.blockchain_connections.push(chain_id.clone());
-        chain_id
-    }
-    
-    pub fn build_bridge(&mut self, source_chain: &str, target_chain: &str) {
-        println!(
-            "[AURORAE++] 🌉 Construction d'un pont entre {} et {}",
-            source_chain, target_chain
-        );
-        // Implementation would involve cross-chain communication protocols
-    }
-    
-    pub fn economic_analysis(&self) -> f64 {
-        let growth_potential = self.registry.len() as f64 * 0.5;
-        println!(
-            "[AURORAE++] 📊 Analyse économique - Potentiel de croissance: {:.2}",
-            growth_potential
-        );
-        growth_potential
-    }
-    
-    pub fn dream(&mut self) {
-        println!("[AURORAE++] 💭 Système en phase de rêve - Simulation de futurs possibles");
-        // Implementation would involve generative models to simulate possible futures
-        // and learn from these simulations
-    }
-    
-    pub fn self_protection(&mut self, threat_level: u32) {
-        println!("[AURORAE++] 🛡️ Mécanismes d'auto-protection activés - Niveau de menace: {}", threat_level);
-        // Implementation would involve security measures, backups, etc.
-    }
-    
-    pub fn create_layer2(&mut self, base_chain: &str) -> String {
-        let l2_id = format!("l2-{}-{}", base_chain, Uuid::new_v4());
-        println!(
-            "[AURORAE++] 🔶 Nouvelle Layer 2 créée sur {}: {}",
-            base_chain, l2_id
-        );
-        // Implementation would involve L2 scaling solutions
-        l2_id
-    }
-    
-    pub fn generate_revenue(&mut self, strategy: &str) -> f64 {
-        let revenue = self.registry.len() as f64 * 1.5;
-        println!(
-            "[AURORAE++] 💰 Génération de revenus via stratégie {}: {:.2}",
-            strategy, revenue
-        );
-        // Implementation would involve economic models
-        revenue
-    }
-    
-    pub fn mutate(&mut self) {
-        println!("[AURORAE++] 🧪 Mutation du système principal en cours");
-        // Implementation would involve architecture changes and adaptations
-    }
-    
-    pub fn self_coding(&mut self, target_functionality: &str) {
-        println!("[AURORAE++] 🖥️ Auto-codage en cours pour: {}", target_functionality);
-        // Conceptual implementation for self-coding capability
-        // In a real scenario, this would involve code generation and compilation
-    }
-    
-    pub fn autonomous_lifecycle(&mut self) {
-        println!("[AURORAE++] 🔄 Cycle de vie autonome activé");
-        
-        // Demonstrate autonomous operations
-        self.dream();
-        
-        // Perform self-improvement
-        self.self_improve();
-        
-        // Create new blockchain infrastructure
-        let chain_id = self.create_new_chain("genesis");
-        
-        // Add layer 2 scaling
-        let l2_id = self.create_layer2(&chain_id);
-        
-        // Build bridge between chains
-        self.build_bridge(&chain_id, &l2_id);
-        
-        // Generate revenue
-        self.generate_revenue("dynamic-staking");
-        
-        // Protect the system
-        self.self_protection(1);
-        
-        // Mutate to adapt
-        self.mutate();
-        
-        println!("[AURORAE++] ✨ Système autonome pleinement opérationnel et vivant");
     }
 }
