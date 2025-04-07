@@ -1,9 +1,3 @@
-
-//! AURORAE++ - reproduction.rs
-//!
-//! Ce module permet à l'IA de se reproduire : générer d'autres intelligences spécialisées,
-//! dériver ses propres composants, cloner des sous-systèmes, ou lancer de nouveaux écosystèmes autonomes.
-
 use uuid::Uuid;
 use chrono::Utc;
 
