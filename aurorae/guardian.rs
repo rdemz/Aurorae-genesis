@@ -42,31 +42,31 @@ impl GuardianSentinel {
         self.registry.insert(name.to_string(), module);
     }
 
-    pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
-        let recovery_needed;
+pub fn update_status(&mut self, name: &str, status: ModuleStatus) {
+    let recovery_needed;
 
-        {
-            // Emprunt limité à ce bloc
-            let module = self.registry.get_mut(name);
-            if let Some(module) = module {
-                module.last_check = Utc::now().to_rfc3339();
-                module.status = status.clone();
-                println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
+    {
+        // Borrowing limited to this block
+        let module = self.registry.get_mut(name);
+        if let Some(module) = module {
+            module.last_check = Utc::now().to_rfc3339();
+            module.status = status.clone();
+            println!("[AURORAE++] 🛰️ Surveillance : {} -> {:?}", name, status);
 
-                recovery_needed = matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted)
-                    && !module.recovery_attempted;
-            } else {
-                return;
-            }
-        }
-
-        // Nouveau scope → nouvel emprunt possible
-        if recovery_needed {
-            if let Some(module) = self.registry.get_mut(name) {
-                self.attempt_recovery(module);
-            }
+            recovery_needed = matches!(status, ModuleStatus::Unresponsive | ModuleStatus::Corrupted)
+                && !module.recovery_attempted;
+        } else {
+            return;
         }
     }
+
+    // New scope → new borrowing possible
+    if recovery_needed {
+        if let Some(module) = self.registry.get_mut(name) {
+            self.attempt_recovery(module);
+        }
+    }
+}
 
     pub fn attempt_recovery(&mut self, module: &mut MonitoredModule) {
         println!(
