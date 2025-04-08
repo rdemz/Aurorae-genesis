@@ -16,7 +16,7 @@ path = "aurorae/main.rs"
 tokio = { version = "1.37", features = ["macros", "rt-multi-thread"] }
 
 # Web3 & déploiement EVM
-ethers = { version = "2.0.14", features = ["abigen", "signers"] }
+ethers = "2.0.14"
 
 # Générateurs aléatoires
 rand = "0.8"
