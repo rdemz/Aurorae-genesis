@@ -13,6 +13,7 @@ path = "aurorae/main.rs"
 [dependencies]
 tokio = { version = "1.37", features = ["macros", "rt-multi-thread"] }
 ethers = "2.0.14"
+k256 = "0.13.1"
 uuid = { version = "1.7", features = ["v4"] }
 chrono = "0.4"
 rand = "0.8"
