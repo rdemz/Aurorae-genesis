@@ -31,8 +31,7 @@ flate2 = "1.0"
 tar = "0.4"
 
 # 🧠 INTELLIGENCE STRATÉGIQUE
-async-openai = { version = "0.14", features = ["reqwest"] }
-
+async-openai = "0.14" ✅
 # 🔧 OUTILS COMPLÉMENTAIRES
 regex = "1.10"
 lazy_static = "1.4"
