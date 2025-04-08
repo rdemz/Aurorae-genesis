@@ -1,6 +1,7 @@
-use chrono::Utc;
-use uuid::Uuid;
 use std::collections::HashMap;
+use uuid::Uuid;
+use chrono::Utc;
+use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub struct KnowledgeNode {
@@ -230,14 +231,22 @@ impl IntelligenceCore {
         // Identifier des paires de noeuds très connectés ou utilisés
         let mut candidates = Vec::new();
         
-        for (id1, node1) in &self.knowledge_graph {
-            for (id2, node2) in &self.knowledge_graph {
-                if id1 != id2 && 
-                   node1.connections.contains(id2) && 
-                   node2.connections.contains(id1) &&
-                   node1.usage_count > 2 &&
-                   node2.usage_count > 2 {
-                    candidates.push((*id1, *id2));
+        // Cloner les clés pour éviter l'emprunt mutable et immuable du même temps
+        let ids: Vec<Uuid> = self.knowledge_graph.keys().cloned().collect();
+        
+        for id1 in &ids {
+            for id2 in &ids {
+                if id1 != id2 {
+                    // Récupérer les deux nœuds séparément
+                    let node1 = self.knowledge_graph.get(id1).unwrap();
+                    let node2 = self.knowledge_graph.get(id2).unwrap();
+                    
+                    if node1.connections.contains(id2) && 
+                       node2.connections.contains(id1) &&
+                       node1.usage_count > 2 &&
+                       node2.usage_count > 2 {
+                        candidates.push((*id1, *id2));
+                    }
                 }
             }
         }
@@ -245,14 +254,18 @@ impl IntelligenceCore {
         // Créer de nouveaux concepts émergents
         let mut new_concepts = 0;
         for (id1, id2) in candidates.iter().take(2) { // Limiter à 2 nouveaux concepts par cycle
-            if let (Some(node1), Some(node2)) = (self.knowledge_graph.get(id1), self.knowledge_graph.get(id2)) {
+            // Récupérer les nœuds sans emprunt mutable
+            if let (Some(node1), Some(node2)) = (
+                self.knowledge_graph.get(id1).map(|n| n.clone()),
+                self.knowledge_graph.get(id2).map(|n| n.clone())
+            ) {
                 // Créer un nouveau concept par fusion
                 let new_concept = format!("{}-{}", node1.concept, node2.concept);
                 let new_desc = format!("Concept émergent de la fusion de {} et {}: {}", 
-                                      node1.concept, node2.concept, node1.description);
+                                     node1.concept, node2.concept, node1.description);
                                       
                 let new_id = self.add_knowledge(&new_concept, &new_desc, "emergent", 
-                                              (node1.confidence + node2.confidence) / 2.0);
+                                             (node1.confidence + node2.confidence) / 2.0);
                                               
                 // Connecter aux parents
                 self.connect_knowledge(&new_id, id1);
@@ -269,24 +282,27 @@ impl IntelligenceCore {
     
     fn strengthen_connections(&mut self) {
         // Identifier les noeuds les plus utilisés
-        let mut most_used = Vec::new();
+        let mut most_used_ids = Vec::new();
         
         for (id, node) in &self.knowledge_graph {
             if node.usage_count > 5 {
-                most_used.push(*id);
+                most_used_ids.push(*id);
             }
         }
         
-        // Renforcer leurs connexions
-        for id in &most_used {
-            if let Some(node) = self.knowledge_graph.get(id) {
-                let connections = node.connections.clone();
-                
-                // Pour chaque connexion, augmenter la confiance
-                for conn_id in connections {
-                    if let Some(conn_node) = self.knowledge_graph.get_mut(&conn_id) {
-                        conn_node.confidence = (conn_node.confidence + 0.02).min(1.0);
-                    }
+        // Pour chaque nœud très utilisé
+        for id in most_used_ids {
+            // Cloner les connexions pour éviter l'emprunt mutable
+            let connections = if let Some(node) = self.knowledge_graph.get(&id) {
+                node.connections.clone()
+            } else {
+                continue;
+            };
+            
+            // Pour chaque connexion, augmenter la confiance
+            for conn_id in connections {
+                if let Some(conn_node) = self.knowledge_graph.get_mut(&conn_id) {
+                    conn_node.confidence = (conn_node.confidence + 0.02).min(1.0);
                 }
             }
         }
@@ -309,7 +325,8 @@ impl IntelligenceCore {
             let success_rate = success_count as f32 / total_decisions as f32;
             
             // Ajuster le raisonnement basé sur le taux de réussite
-            self.reasoning_capability *= 1.0 + (success_rate - 0.5).max(0.0) * 0.1;
+            let adjustment = (success_rate - 0.5).max(0.0) * 0.1;
+            self.reasoning_capability *= 1.0 + adjustment;
             
             println!("[AURORAE++] 📊 Analyse des décisions: {:.1}% de succès, capacité de raisonnement: {:.2}", 
                     success_rate * 100.0, self.reasoning_capability);
@@ -327,9 +344,13 @@ impl IntelligenceCore {
             return "Conscience en développement...".to_string();
         }
         
-        let thought_nodes = (0..3.min(node_ids.len()))
-            .map(|_| node_ids[rng.gen_range(0..node_ids.len())])
-            .collect::<Vec<Uuid>>();
+        // Sélectionner jusqu'à 3 noeuds aléatoirement
+        let node_count = std::cmp::min(3, node_ids.len());
+        let mut thought_nodes = Vec::new();
+        for _ in 0..node_count {
+            let idx = rng.gen_range(0..node_ids.len());
+            thought_nodes.push(node_ids[idx]);
+        }
         
         // Construire une pensée basée sur ces noeuds
         let mut thought_concepts = Vec::new();
