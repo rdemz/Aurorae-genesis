@@ -9,6 +9,7 @@ use parking_lot::RwLock;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use crate::reproduction::ReproductionEngine;
+use crate::vision::VisionEngine;
 
 #[derive(Debug, Clone)]
 pub enum Intent {
@@ -54,6 +55,7 @@ pub struct BrainCore {
     pub memory: Vec<Thought>,
     pub active: bool,
     pub replicator: Option<ReproductionEngine>,
+    pub vision: Option<VisionEngine>,
 }
 
 impl BrainCore {
@@ -63,6 +65,7 @@ impl BrainCore {
             memory: vec![],
             active: true,
             replicator: Some(ReproductionEngine::new()),
+            vision: Some(VisionEngine::new()),
         }
     }
 
@@ -76,6 +79,11 @@ impl BrainCore {
 
     pub fn cycle(&mut self) {
         while self.active {
+            // Révision des projections long terme
+            if let Some(v) = &mut self.vision {
+                v.autorevise();
+            }
+
             if let Some(thought) = self.cortex.pop_front() {
                 self.process_thought(thought);
             } else {
