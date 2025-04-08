@@ -51,6 +51,21 @@ impl IntelligenceCore {
         // Ici on pourrait appeler un modèle d'apprentissage automatique pour améliorer le modèle
         // Par exemple, apprentissage supervisé ou par renforcement avec des données externes
     }
+
+    // Retourne le niveau d'intelligence basé sur le nombre de nœuds modifiés
+    pub fn get_intelligence_level(&self) -> f32 {
+        // Exemple simple : le niveau d'intelligence est basé sur le nombre de nœuds mis à jour
+        self.updated_nodes.len() as f32
+    }
+
+    // Simule une pensée en mettant à jour un nœud aléatoire
+    pub fn simulate_thought(&mut self) {
+        // Exemple simple : on marque un nœud comme mis à jour et on le réévalue
+        if let Some((id, _)) = self.knowledge_graph.iter_mut().next() {
+            self.updated_nodes.insert(id.clone());
+            self.update_graph();
+        }
+    }
 }
 
 pub struct KnowledgeNode {
@@ -62,7 +77,6 @@ pub struct KnowledgeNode {
 impl KnowledgeNode {
     // Méthode de recalcul du nœud, à ajuster en fonction de la logique de mise à jour
     pub fn recalculate(&mut self) {
-        // Exemple simple : recalcul du nœud en fonction de ses données
         if self.needs_update {
             println!("Recalcul du nœud : {}", self.data);
             // Logique de recalcul ici...
