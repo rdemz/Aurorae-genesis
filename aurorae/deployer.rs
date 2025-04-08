@@ -1,7 +1,8 @@
 use uuid::Uuid;
 use chrono::Utc;
-use alloy_provider::HttpProvider;
 use std::collections::HashMap;
+
+use crate::blockchain_core::HttpProvider;
 
 // Configurations pour le déploiement
 #[derive(Clone)]
@@ -80,9 +81,6 @@ impl Deployer {
 
         println!("[AURORAE++] 🚀 Déploiement du contrat {} sur {}", contract_name, config.network);
 
-        // Dans une implémentation réelle, cela compilerait et déploierait le contrat via alloy
-        // Pour l'instant, nous simulons le déploiement
-        
         // Simuler le déploiement
         let result = DeploymentResult {
             contract_address: format!("0x{}", Uuid::new_v4().simple().to_string()),
@@ -131,17 +129,16 @@ impl Deployer {
     pub async fn upgrade_contract(&mut self, contract_address: &str, new_contract_name: &str) -> Result<DeploymentResult, String> {
         println!("[AURORAE++] 📝 Mise à niveau du contrat à l'adresse {}", contract_address);
         
-        // Trouver le déploiement original
-        let original_network = self.deployment_history.iter()
-            .find(|d| d.contract_address == contract_address)
-            .map(|d| d.network.clone())
-            .ok_or_else(|| format!("Contrat à l'adresse {} non trouvé dans l'historique", contract_address))?;
+        // Trouver le déploiement original pour obtenir le réseau
+        let original_opt = self.deployment_history.iter().find(|d| d.contract_address == contract_address);
         
-        let original_name = self.deployment_history.iter()
-            .find(|d| d.contract_address == contract_address)
-            .map(|d| d.contract_name.clone())
-            .unwrap_or("Unknown".to_string());
-            
+        if original_opt.is_none() {
+            return Err(format!("Contrat à l'adresse {} non trouvé dans l'historique", contract_address));
+        }
+        
+        let original_network = original_opt.unwrap().network.clone();
+        let original_name = original_opt.unwrap().contract_name.clone();
+        
         // Préparer la configuration pour la mise à niveau
         let upgrade_config = DeploymentConfig {
             network: original_network,
