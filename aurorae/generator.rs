@@ -1,8 +1,3 @@
-//! AURORAE++ - generator.rs
-//!
-//! Moteur de génération de code Rust vivant. Ce module répond aux signaux envoyés par brain.rs pour produire du code réel,
-//! structuré, compilable et évolutif, tout en apprenant des meilleures pratiques et en intégrant l'analyse continue.
-
 use std::fs::{create_dir_all, File};
 use std::io::{Write, Result};
 use std::path::Path;
@@ -38,15 +33,18 @@ impl GeneratedModule {
 
         // Exécution de l'analyse de code avant la sauvegarde
         let analysis_result = analyze(&self.content);
-        if analysis_result.has_warnings() {
-            // Si des avertissements sont présents, effectuer un refactoring
+        if !analysis_result.is_valid() {
+            // Si des erreurs sont présentes, effectuer un refactoring
+            println!("[AURORAE++] ⚠️ Erreurs détectées dans le code, refactoring...");
             self.refactor_code();
+        } else {
+            println!("[AURORAE++] ✅ Analyse réussie sans erreurs.");
         }
 
         // Exécution de l'analyse avec Clippy pour détecter les problèmes de style
         let clippy_result = run_clippy(&self.content);
-        if clippy_result.has_warnings() {
-            println!("[AURORAE++] Clippy a trouvé des avertissements, les suggestions seront appliquées.");
+        if !clippy_result.is_valid() {
+            println!("[AURORAE++] ⚠️ Clippy a trouvé des avertissements, les suggestions seront appliquées.");
             // Appliquer les suggestions Clippy pour améliorer le code généré
             self.apply_clippy_suggestions();
         }
@@ -61,14 +59,14 @@ impl GeneratedModule {
     // Méthode pour effectuer un refactoring si des problèmes sont détectés dans l'analyse
     fn refactor_code(&self) {
         // Logiciel de refactoring - pourrait utiliser des outils comme `rustfmt` ou des suggestions de `clippy`
-        println!("[AURORAE++] Refactoring du module {}", self.name);
+        println!("[AURORAE++] 🔧 Refactoring du module {}", self.name);
         // Implémenter ici les suggestions d'amélioration, comme l'optimisation de la gestion des erreurs ou de la mémoire
     }
 
     // Appliquer les suggestions de Clippy pour améliorer le code généré
     fn apply_clippy_suggestions(&self) {
         // Appliquer les corrections basées sur les avertissements de Clippy
-        println!("[AURORAE++] Application des suggestions Clippy pour le module {}", self.name);
+        println!("[AURORAE++] 💡 Application des suggestions Clippy pour le module {}", self.name);
         // Cela pourrait inclure des changements comme la simplification de certains blocs ou l'ajout de gestion d'erreurs
     }
 }
