@@ -14,13 +14,13 @@ impl DecisionNet {
         // Ajouter les couches cachées
         let mut prev_size = input_size;
         for &size in &hidden_sizes {
-            net = net.add(nn::linear(vs, prev_size, size, Default::default()));
+            net = net.add(nn::linear(vs.root(), prev_size, size, Default::default()));  // Utilisation de vs.root()
             net = net.add_fn(|xs| xs.relu());
             prev_size = size;
         }
 
         // Ajouter la couche de sortie
-        net = net.add(nn::linear(vs, prev_size, output_size, Default::default()));
+        net = net.add(nn::linear(vs.root(), prev_size, output_size, Default::default()));  // Utilisation de vs.root()
 
         DecisionNet { net }
     }
@@ -47,6 +47,6 @@ impl DecisionNet {
     }
 }
 
-pub fn create_optimizer(vs: &nn::VarStore) -> nn::Adam {
+pub fn create_optimizer(vs: &nn::VarStore) -> nn::Optimizer<nn::Adam> {
     nn::Adam::default().build(vs, 1e-3).unwrap()  // Crée l'optimiseur Adam avec un taux d'apprentissage de 1e-3
 }
