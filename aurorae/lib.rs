@@ -12,7 +12,3 @@ pub mod blockchain_core;
 pub mod evolution;
 pub mod intelligence;
 pub mod security;
-pub mod brain;
-
-// Point d'entrée pour les bibliothèques
-pub use autonomy::AuroraeCore;
