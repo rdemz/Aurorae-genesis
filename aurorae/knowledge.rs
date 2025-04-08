@@ -12,8 +12,8 @@ use serde::{Serialize, Deserialize};
 const DB_PATH: &str = "C:\\Users\\admin\\.github_feed\\aurorae_knowledge.json";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PatternStat {
-    pub project: String,
+pub struct Pattern {
+    pub module_name: String,
     pub functions: usize,
     pub structs: usize,
     pub traits: usize,
@@ -22,10 +22,11 @@ pub struct PatternStat {
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct KnowledgeBase {
-    pub records: Vec<PatternStat>,
+    pub records: Vec<Pattern>,
 }
 
 impl KnowledgeBase {
+    // Charge la base de données à partir du fichier JSON
     pub fn load() -> Self {
         let path = PathBuf::from(DB_PATH);
         if path.exists() {
@@ -38,6 +39,7 @@ impl KnowledgeBase {
         }
     }
 
+    // Sauvegarde la base de données dans le fichier JSON
     pub fn save(&self) {
         let path = PathBuf::from(DB_PATH);
         if let Some(parent) = path.parent() {
@@ -48,15 +50,32 @@ impl KnowledgeBase {
         file.write_all(json.as_bytes()).unwrap();
     }
 
-    pub fn insert_stat(&mut self, stat: PatternStat) {
-        self.records.push(stat);
+    // Insère un nouveau pattern dans la base de données
+    pub fn insert_pattern(&mut self, pattern: Pattern) {
+        self.records.push(pattern);
         self.save();
     }
 
+    // Récupère tous les patterns stockés
+    pub fn get_patterns(&self) -> &Vec<Pattern> {
+        &self.records
+    }
+
+    // Affiche un résumé des patterns stockés dans la base de données
     pub fn summarize(&self) {
         println!("[AURORAE++] Base de savoir : {} projets analysés.", self.records.len());
         for r in &self.records {
-            println!("→ {}: {} fn / {} struct / {} trait / {} enum", r.project, r.functions, r.structs, r.traits, r.enums);
+            println!(
+                "→ {}: {} fn / {} struct / {} trait / {} enum",
+                r.module_name, r.functions, r.structs, r.traits, r.enums
+            );
         }
+    }
+}
+
+// Méthode d'intégration avec `learning.rs` pour ajouter des patterns à la base de savoir
+impl KnowledgeBase {
+    pub fn add_pattern_from_learning(&mut self, pattern: Pattern) {
+        self.insert_pattern(pattern);
     }
 }
