@@ -34,7 +34,7 @@ impl PatternInsight {
 }
 
 /// Lit tous les projets clonés et analyse leurs fichiers Rust
-pub fn scan_feed_and_learn(memory: &mut Memory) {
+pub fn scan_feed_and_learn(knowledge_base: &mut KnowledgeBase) {
     if let Ok(entries) = read_dir(FEED_PATH) {
         for entry in entries.flatten() {
             let path = entry.path();
