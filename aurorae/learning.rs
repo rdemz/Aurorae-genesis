@@ -44,7 +44,7 @@ pub fn scan_feed_and_learn(knowledge_base: &mut KnowledgeBase) {
                 let pattern = stats.to_pattern();
                 
                 // Ajouter les patterns extraits à la mémoire vivante
-                knowledge_base.add_pattern(pattern);  // Utilisation correcte de `knowledge_base.add_pattern()`
+                knowledge_base.add_pattern(pattern);  // Utilisation correcte de `add_pattern`
             }
         }
     }
