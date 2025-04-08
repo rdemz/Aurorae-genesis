@@ -34,19 +34,19 @@ impl DecisionNet {
     pub fn train(&self, input: Tensor, target: Tensor, optimizer: &mut nn::Adam) {
         // Forward pass : calculer la sortie
         let output = self.forward(input);
-        
+
         // Calcul de la perte (MSE - Mean Squared Error)
         let loss = output.mse_loss(&target, tch::Reduction::Mean);
-        
+
         // Backward pass : calculer les gradients
         loss.backward();
-        
+
         // Mettre à jour les poids du réseau
-        optimizer.step();
+        optimizer.zero_grad();  // Réinitialiser les gradients avant la mise à jour
+        optimizer.step();       // Appliquer les gradients
     }
 }
 
 pub fn create_optimizer(vs: &nn::VarStore) -> nn::Adam {
-    nn::Adam::default().build(vs, 1e-3).unwrap()
+    nn::Adam::default().build(vs, 1e-3).unwrap()  // Crée l'optimiseur Adam avec un taux d'apprentissage de 1e-3
 }
-
