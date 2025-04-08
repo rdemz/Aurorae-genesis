@@ -54,18 +54,34 @@ impl LearningAgent {
     }
 
     pub fn update_q_value(&mut self, action: &str, reward: f32, next_state: &str) {
+        // Calculer d'abord la valeur Q maximale pour le prochain état
+        // en collectant les valeurs dans un vecteur temporaire
+        let mut max_future_q = 0.0;
+        
+        // Collecter toutes les Q-values pour le prochain état
+        let future_q_values: Vec<f32> = self.actions.iter()
+            .filter_map(|a| {
+                if let Some(action_map) = self.q_table.get(a) {
+                    action_map.get(next_state).cloned()
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        // Trouver la valeur maximale
+        if !future_q_values.is_empty() {
+            max_future_q = *future_q_values.iter().max_by(|a, b| 
+                a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
+            ).unwrap_or(&0.0);
+        }
+
+        // Maintenant, mettre à jour la valeur Q actuelle
         let current_q_value = self.q_table
             .entry(action.to_string())
             .or_insert_with(HashMap::new)
             .entry(self.state.clone())
             .or_insert(0.0);
-
-        // Créer une variable temporaire pour récupérer les Q-values des actions disponibles
-        let max_future_q = self.actions.iter()
-            .filter_map(|a| self.q_table.get(a))
-            .filter_map(|action_map| action_map.get(next_state))
-            .cloned()
-            .fold(0.0, f32::max);
 
         // Calculer la nouvelle Q-value
         let new_q_value = *current_q_value + self.learning_rate * (reward + self.discount_factor * max_future_q - *current_q_value);
