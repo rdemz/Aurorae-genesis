@@ -94,7 +94,8 @@ impl EvolutionEngine {
         
         for cap_id in cap_ids {
             // Certaines capacités évoluent à chaque cycle
-            if rand::thread_rng().gen_bool(0.3 + (self.evolution_level * 0.05) as f64) {
+            let mut rng = rand::thread_rng();
+            if rng.gen_bool(0.3 + (self.evolution_level * 0.05) as f64) {
                 if let Some(cap) = self.capabilities.get_mut(&cap_id) {
                     cap.level += 1;
                     cap.last_evolved = Utc::now().to_rfc3339();
@@ -108,9 +109,12 @@ impl EvolutionEngine {
         }
         
         // Étape 2: Générer de nouvelles capacités par combinaison
-        if self.cycle_count >= 2 && rand::thread_rng().gen_bool(self.mutation_chance as f64 + (self.evolution_level * 0.01) as f64) {
-            let new_cap_id = self.generate_new_capability();
-            new_caps.push(new_cap_id);
+        if self.cycle_count >= 2 {
+            let mut rng = rand::thread_rng();
+            if rng.gen_bool(self.mutation_chance as f64 + (self.evolution_level * 0.01) as f64) {
+                let new_cap_id = self.generate_new_capability();
+                new_caps.push(new_cap_id);
+            }
         }
         
         // Étape 3: Augmenter le niveau d'évolution global
@@ -144,7 +148,10 @@ impl EvolutionEngine {
         
         // Choisir 2-3 capacités existantes comme parents
         let cap_ids: Vec<Uuid> = self.capabilities.keys().cloned().collect();
-        let parent_count = rng.gen_range(2..=3).min(cap_ids.len());
+        let parent_count = std::cmp::min(
+            rng.gen_range(2..=3), 
+            cap_ids.len()
+        );
         
         let mut dependencies = Vec::new();
         let mut parents = Vec::new();
@@ -154,7 +161,7 @@ impl EvolutionEngine {
             let parent_id = cap_ids[idx];
             if let Some(cap) = self.capabilities.get(&parent_id) {
                 dependencies.push(parent_id);
-                parents.push(cap);
+                parents.push(cap.clone());
             }
         }
         
@@ -178,11 +185,22 @@ impl EvolutionEngine {
         
         // Générer une description basée sur les capacités parentes
         let parent_names: Vec<&str> = parents.iter().map(|p| p.name.as_str()).collect();
-        let description = format!(
-            "Capacité émergente née de la fusion de {} et {}. Permet au système d'atteindre un nouveau niveau de conscience et d'autonomie.", 
-            parent_names[0..parent_names.len()-1].join(", "),
-            parent_names.last().unwrap_or(&"l'évolution")
-        );
+        let description = if !parent_names.is_empty() {
+            if parent_names.len() == 1 {
+                format!(
+                    "Capacité émergente née de l'évolution de {}. Permet au système d'atteindre un nouveau niveau de conscience et d'autonomie.", 
+                    parent_names[0]
+                )
+            } else {
+                let (last, rest) = parent_names.split_last().unwrap();
+                format!(
+                    "Capacité émergente née de la fusion de {} et {}. Permet au système d'atteindre un nouveau niveau de conscience et d'autonomie.", 
+                    rest.join(", "), last
+                )
+            }
+        } else {
+            "Capacité émergente spontanée. Permet au système d'atteindre un nouveau niveau de conscience.".to_string()
+        };
         
         // Créer la nouvelle capacité
         let cap_id = Uuid::new_v4();
@@ -204,7 +222,8 @@ impl EvolutionEngine {
     }
     
     pub async fn generate_new_capabilities(&mut self) -> Result<Vec<Uuid>, String> {
-        let count = rand::thread_rng().gen_range(1..=3);
+        let mut rng = rand::thread_rng();
+        let count = rng.gen_range(1..=3);
         
         println!("[AURORAE++] 🧬 Auto-génération de {} nouvelles capacités", count);
         
@@ -299,8 +318,9 @@ impl EvolutionEngine {
             "#
         ];
         
+        let mut rng = rand::thread_rng();
         // Choisir un template aléatoirement
-        let code = code_templates[rand::thread_rng().gen_range(0..code_templates.len())].trim();
+        let code = code_templates[rng.gen_range(0..code_templates.len())].trim();
         
         println!("[AURORAE++] 📄 Code auto-généré avec succès");
         
