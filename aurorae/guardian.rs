@@ -91,64 +91,67 @@ impl GuardianSentinel {
             let evolution_candidate = module.autonomous_decisions > 10 && module.learning_factor > 2.0;
             
             // Retourner un tuple des informations collectées
-            Some((needs_recovery, evolution_candidate))
+            Some((needs_recovery, evolution_candidate, module.name.clone()))
         } else {
             println!("[AURORAE++] ⚠️ Module inconnu: {}", name);
             None
         };
         
         // Si le module existe, traiter la récupération et l'évolution si nécessaire
-        if let Some((needs_recovery, evolution_candidate)) = module_info {
+        if let Some((needs_recovery, evolution_candidate, module_name)) = module_info {
             // Gérer la récupération si nécessaire
             if needs_recovery {
-                // Cloner le nom du module pour la récupération
-                let module_name = name.to_string();
-                
-                // Effectuer des opérations de récupération sur le module cloné
-                if let Some(module) = self.registry.get_mut(&module_name) {
-                    // Marquer la récupération comme tentée
-                    module.recovery_attempted = true;
-                    module.status = ModuleStatus::SelfHealing;
-                    module.autonomous_decisions += 1;
-                    self.total_decisions += 1;
-                    
-                    // Simuler la prise de décision autonome
-                    println!("[AURORAE++] 🧠 Diagnostic autonome en cours pour {}...", module.name);
-                    
-                    // Après la fin du processus de récupération
-                    module.status = ModuleStatus::Operational;
-                    module.learning_factor *= 1.1; // Apprentissage basé sur l'expérience de récupération
-                    
-                    println!("[AURORAE++] 🚑 Récupération réussie pour module: {}", module.name);
-                    
-                    // Enregistrer l'incident pour apprentissage
-                    self.record_threat("module_failure", &module.name);
-                }
+                self.handle_recovery(&module_name);
             }
             
             // Gérer l'évolution si le candidat est en mode autonome
             if evolution_candidate && self.autonomous_mode {
-                // Cloner le nom du module pour l'évolution
-                let module_name = name.to_string();
-                
-                // Effectuer des opérations d'évolution
-                if let Some(module) = self.registry.get_mut(&module_name) {
-                    // Processus d'évolution
-                    println!("[AURORAE++] 🌌 Évolution autonome du module: {}", module.name);
-                    module.evolution_stage += 1;
-                    module.status = ModuleStatus::Evolving;
-                    module.learning_factor *= 1.5;
-                    self.modules_evolved += 1;
-                    
-                    println!(
-                        "[AURORAE++] 🚀 Module {} a atteint le stade d'évolution {}",
-                        module.name, module.evolution_stage
-                    );
-                    
-                    // Après le processus d'évolution
-                    module.status = ModuleStatus::Operational;
-                }
+                self.handle_evolution(&module_name);
             }
+        }
+    }
+    
+    fn handle_recovery(&mut self, module_name: &str) {
+        // Effectuer des opérations de récupération sur le module
+        if let Some(module) = self.registry.get_mut(module_name) {
+            // Marquer la récupération comme tentée
+            module.recovery_attempted = true;
+            module.status = ModuleStatus::SelfHealing;
+            module.autonomous_decisions += 1;
+            self.total_decisions += 1;
+            
+            // Simuler la prise de décision autonome
+            println!("[AURORAE++] 🧠 Diagnostic autonome en cours pour {}...", module.name);
+            
+            // Après la fin du processus de récupération
+            module.status = ModuleStatus::Operational;
+            module.learning_factor *= 1.1; // Apprentissage basé sur l'expérience de récupération
+            
+            println!("[AURORAE++] 🚑 Récupération réussie pour module: {}", module.name);
+        }
+        
+        // Enregistrer l'incident pour apprentissage
+        let module_name_clone = module_name.to_string();
+        self.record_threat("module_failure", &module_name_clone);
+    }
+    
+    fn handle_evolution(&mut self, module_name: &str) {
+        // Effectuer des opérations d'évolution
+        if let Some(module) = self.registry.get_mut(module_name) {
+            // Processus d'évolution
+            println!("[AURORAE++] 🌌 Évolution autonome du module: {}", module.name);
+            module.evolution_stage += 1;
+            module.status = ModuleStatus::Evolving;
+            module.learning_factor *= 1.5;
+            self.modules_evolved += 1;
+            
+            println!(
+                "[AURORAE++] 🚀 Module {} a atteint le stade d'évolution {}",
+                module.name, module.evolution_stage
+            );
+            
+            // Après le processus d'évolution
+            module.status = ModuleStatus::Operational;
         }
     }
     
