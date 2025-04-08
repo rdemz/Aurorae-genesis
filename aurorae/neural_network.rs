@@ -1,6 +1,7 @@
 extern crate tch;
 use tch::{nn, Device, Tensor};
 use tch::nn::Module;  // Importer le trait Module
+use tch::nn::OptimizerConfig;  // Importer le trait OptimizerConfig
 
 pub struct DecisionNet {
     pub net: nn::Sequential,
