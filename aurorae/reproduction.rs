@@ -1,8 +1,9 @@
-Vuse uuid::Uuid;
+use uuid::Uuid;
 use chrono::Utc;
+use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuroraInstance {
     pub id: Uuid,
     pub parent_id: Option<Uuid>,
@@ -13,7 +14,7 @@ pub struct AuroraInstance {
     pub is_active: bool,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct ReproductionEngine {
     pub children: Vec<AuroraInstance>,
 }
