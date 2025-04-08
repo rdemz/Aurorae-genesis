@@ -87,7 +87,7 @@ async fn main() {
     println!("[AURORAE++] Code après refactorisation : {}", refactored_code);
 
     // Extraire les patterns de code à partir des projets clonés avec pattern_extractor.rs
-    let dir = Path::new("path/to/your/github/repo");  // Assurez-vous de mettre le bon chemin
+    let dir = Path::new("path/https://github.com/rdemz/test-aurorae");  // Assurez-vous de mettre le bon chemin
     let extracted_patterns = pattern_extractor::extract_patterns_from_directory(&dir);
     for pattern in extracted_patterns {
         println!("[AURORAE++] 🎯 Pattern extrait : {:?}", pattern);
