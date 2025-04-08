@@ -8,8 +8,8 @@ use std::io::{Write, Result};
 use std::path::Path;
 use uuid::Uuid;
 use chrono::Utc;
-use rust_analyzer::analyze;  // Module hypothétique d'analyse de code
-use clippy_integration::run_clippy; // Intégration de clippy pour l'analyse de code
+use crate::rust_analyzer::analyze;  // Utilisation du module local rust_analyzer
+use crate::clippy_integration::run_clippy; // Utilisation du module local clippy_integration
 
 #[derive(Debug)]
 pub struct GeneratedModule {
@@ -32,7 +32,7 @@ impl GeneratedModule {
     pub fn save_to_disk(&self, base_path: &str) -> Result<()> {
         let full_path = format!("{}/generated_modules/{}", base_path, self.name);
         let dir_path = Path::new(&full_path);
-        create_dir_all(dir_path)?;
+        create_dir_all(dir_path)?;  // Crée le répertoire s'il n'existe pas
 
         let file_path = dir_path.join("mod.rs");
 
@@ -51,8 +51,8 @@ impl GeneratedModule {
             self.apply_clippy_suggestions();
         }
 
-        let mut file = File::create(file_path)?;
-        file.write_all(self.content.as_bytes())?;
+        let mut file = File::create(file_path)?; // Créer et ouvrir le fichier mod.rs
+        file.write_all(self.content.as_bytes())?;  // Écrire le contenu dans le fichier
 
         println!("[AURORAE++] Module {} enregistré à {}", self.name, full_path);
         Ok(())
@@ -76,7 +76,6 @@ impl GeneratedModule {
 /// Génère un module Rust de base intelligent
 pub fn generate_basic_module(name: &str) -> GeneratedModule {
     let content = format!(
-// Générer un module Rust avec un message personnalisé
         "// Module généré automatiquement par AURORAE++\n\n\
 /// Nom : {}\n/// UID : {}\n\npub fn hello() {{\n    println!(\"[{}] Hello from generated module!\");\n}}",
         name,
