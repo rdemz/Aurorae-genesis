@@ -132,13 +132,19 @@ impl Deployer {
         println!("[AURORAE++] 📝 Mise à niveau du contrat à l'adresse {}", contract_address);
         
         // Trouver le déploiement original
-        let original = self.deployment_history.iter()
+        let original_network = self.deployment_history.iter()
             .find(|d| d.contract_address == contract_address)
+            .map(|d| d.network.clone())
             .ok_or_else(|| format!("Contrat à l'adresse {} non trouvé dans l'historique", contract_address))?;
+        
+        let original_name = self.deployment_history.iter()
+            .find(|d| d.contract_address == contract_address)
+            .map(|d| d.contract_name.clone())
+            .unwrap_or("Unknown".to_string());
             
         // Préparer la configuration pour la mise à niveau
         let upgrade_config = DeploymentConfig {
-            network: original.network.clone(),
+            network: original_network,
             gas_limit: 4000000, // Plus élevé pour les mises à niveau
             priority_fee: Some(3),
             constructor_args: vec![contract_address.to_string()], // Adresse du contrat précédent
@@ -148,7 +154,7 @@ impl Deployer {
         // Déployer le nouveau contrat
         let result = self.deploy_contract(new_contract_name, Some(upgrade_config)).await?;
         
-        println!("[AURORAE++] 🔄 Contrat mis à niveau: {} -> {}", original.contract_name, new_contract_name);
+        println!("[AURORAE++] 🔄 Contrat mis à niveau: {} -> {}", original_name, new_contract_name);
         
         // Bonus d'innovation pour les mises à niveau
         self.innovation_score *= 1.03;
