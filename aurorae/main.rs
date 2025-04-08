@@ -1,4 +1,5 @@
-//! main.rs — Point d’entrée du moteur vivant AURORAE++
+//! main.rs — Point d’entrée du système vivant AURORAE++
+//! Lance le moteur AuroraeEngine et exécute un cycle complet.
 
 mod deployer;
 mod nft_minter;
@@ -33,8 +34,8 @@ async fn main() {
 
     let mut system = AuroraeEngine::new();
 
-    // 🔁 Simulation complète d’un cycle IA + économie + rêve + NFT
+    // 🔁 Lancement d'un cycle complet autonome
     system.start_autonomous_cycle().await;
 
-    println!("[AURORAE++] ✅ Système opérationnel");
+    println!("[AURORAE++] ✅ Cycle terminé. Système stable.");
 }
