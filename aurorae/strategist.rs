@@ -38,7 +38,7 @@ impl Strategist {
         let client = Client::new();
         let request = CreateChatCompletionRequestArgs::default()
             .model("gpt-4")
-            .messages([
+            .messages([ 
                 ChatCompletionRequestMessageArgs::default()
                     .role(Role::System)
                     .content("Tu es un stratégiste cognitif pour une IA post-humaniste.")
@@ -57,19 +57,24 @@ impl Strategist {
         match client.chat().create(request).await {
             Ok(response) => {
                 if let Some(choice) = response.choices.first() {
-                    let answer = choice.message.content.trim().to_lowercase();
-                    println!("[STRATEGIST] 🧠 OpenAI suggère : {}", answer);
+                    // Traite la réponse potentiellement Option<String>
+                    if let Some(content) = choice.message.content.as_ref() {
+                        let answer = content.trim().to_lowercase();
+                        println!("[STRATEGIST] 🧠 OpenAI suggère : {}", answer);
 
-                    let intent = Self::map_to_intent(&answer);
-                    let urgency = 220 + rand::thread_rng().gen_range(0..=30);
+                        let intent = Self::map_to_intent(&answer);
+                        let urgency = 220 + rand::thread_rng().gen_range(0..=30);
 
-                    let mut brain_lock = brain.write();
-                    if let Some(intent) = intent {
-                        brain_lock.push_thought(Thought::new(intent, urgency));
+                        let mut brain_lock = brain.write();
+                        if let Some(intent) = intent {
+                            brain_lock.push_thought(Thought::new(intent, urgency));
+                        } else {
+                            let fallback = Intent::Observe;
+                            println!("[STRATEGIST] ❓ Aucune intention reconnue, fallback vers {:?}", fallback);
+                            brain_lock.push_thought(Thought::new(fallback, 128));
+                        }
                     } else {
-                        let fallback = Intent::Observe;
-                        println!("[STRATEGIST] ❓ Aucune intention reconnue, fallback vers {:?}", fallback);
-                        brain_lock.push_thought(Thought::new(fallback, 128));
+                        println!("[STRATEGIST] ⚠️ Aucune réponse de contenu retournée.");
                     }
                 }
             }
