@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 use uuid::Uuid;
-use chrono::Utc;
-use rand::Rng;
+use std::time::{Duration, SystemTime};
 
-// Structure simplifiée pour une intégration blockchain fonctionnelle
 pub struct HttpProvider {
     url: String,
 }
@@ -13,6 +11,10 @@ impl HttpProvider {
         Self {
             url: url.into(),
         }
+    }
+    
+    pub fn get_url(&self) -> &str {
+        &self.url
     }
 }
 
@@ -29,7 +31,7 @@ pub struct BlockchainCore {
 
 impl BlockchainCore {
     pub fn new() -> Self {
-        let mainnet_url = std::env::var("ETH_RPC_URL").unwrap_or_else(|_| "http://localhost:8545".to_string());
+        let mainnet_url = std::env::var("ETH_MAINNET_URL").unwrap_or_else(|_| "http://localhost:8545".to_string());
         
         let mut providers = HashMap::new();
         providers.insert("aurorae-genesis".to_string(), HttpProvider::new(mainnet_url));
@@ -76,7 +78,7 @@ impl BlockchainCore {
         Ok(wallet_id)
     }
     
-    pub async fn deploy_smart_contract(&mut self, network: &str, contract_name: &str, bytecode: &[u8]) -> Result<String, String> {
+    pub async fn deploy_smart_contract(&mut self, network: &str, contract_name: &str, _bytecode: &[u8]) -> Result<String, String> {
         if !self.networks.contains(&network.to_string()) {
             return Err(format!("Réseau {} inconnu", network));
         }
