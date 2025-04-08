@@ -1,5 +1,6 @@
 extern crate tch;
 use tch::{nn, Device, Tensor};
+use tch::nn::Module;  // Importer le trait Module
 
 pub struct DecisionNet {
     pub net: nn::Sequential,
@@ -24,7 +25,7 @@ impl DecisionNet {
     }
 
     pub fn forward(&self, input: Tensor) -> Tensor {
-        self.net.forward(&input)
+        self.net.forward(&input)  // Utilisation de la méthode forward
     }
 
     // Entraîner le réseau
