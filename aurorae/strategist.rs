@@ -10,6 +10,7 @@ use openai_api_rust::{ChatMessage, OpenAI, ChatCompletionMessageRole};
 use std::sync::Arc;
 use parking_lot::RwLock;
 use rand::seq::SliceRandom;
+use rand::Rng;
 
 pub struct Strategist {
     pub api_key: String,
@@ -23,7 +24,7 @@ impl Strategist {
     }
 
     /// 🔮 Analyse la roadmap et injecte des pensées inspirées d'OpenAI
-    pub fn consult_openai(&self, brain: &Arc<RwLock<BrainCore>>, vision: &VisionEngine) {
+    pub async fn consult_openai(&self, brain: &Arc<RwLock<BrainCore>>, vision: &mut VisionEngine) {
         let Some(proj) = vision.projections.iter().max_by_key(|p| p.priority) else {
             println!("[STRATEGIST] ❌ Aucune projection prioritaire trouvée.");
             return;
@@ -48,16 +49,25 @@ impl Strategist {
 
         match client.chat_completion_create("gpt-4", &messages) {
             Ok(response) => {
+                if response.choices.is_empty() {
+                    println!("[STRATEGIST] ⚠️ OpenAI n'a retourné aucune suggestion.");
+                    return;
+                }
+
                 if let Some(choice) = response.choices.first() {
                     let answer = choice.message.content.trim().to_lowercase();
                     println!("[STRATEGIST] 🧠 OpenAI suggère : {}", answer);
 
                     let intent = Self::map_to_intent(&answer);
+                    let urgency = 220 + rand::thread_rng().gen_range(0..=30);
+
+                    let mut brain_lock = brain.write();
                     if let Some(intent) = intent {
-                        let mut brain_lock = brain.write();
-                        brain_lock.push_thought(Thought::new(intent, 255));
+                        brain_lock.push_thought(Thought::new(intent, urgency));
                     } else {
-                        println!("[STRATEGIST] ❓ Aucune intention correspondante trouvée.");
+                        let fallback = Intent::Observe;
+                        println!("[STRATEGIST] ❓ Aucune intention reconnue, fallback vers {:?}", fallback);
+                        brain_lock.push_thought(Thought::new(fallback, 128));
                     }
                 }
             }
