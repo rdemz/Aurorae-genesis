@@ -45,10 +45,12 @@ impl LearningAgent {
             // Exploitation : choisir l'action avec la meilleure Q-value pour l'état actuel
             let best_action = self.actions.iter()
                 .max_by(|a, b| {
-                    let a_q_value = *self.q_table.get(*a).unwrap_or(&HashMap::new())
-                        .get(&self.state).unwrap_or(&0.0);
-                    let b_q_value = *self.q_table.get(*b).unwrap_or(&HashMap::new())
-                        .get(&self.state).unwrap_or(&0.0);
+                    let a_q_value = self.q_table.get(*a)
+                        .and_then(|action_map| action_map.get(&self.state))
+                        .unwrap_or(&0.0);
+                    let b_q_value = self.q_table.get(*b)
+                        .and_then(|action_map| action_map.get(&self.state))
+                        .unwrap_or(&0.0);
                     a_q_value.partial_cmp(&b_q_value).unwrap_or(std::cmp::Ordering::Equal)
                 })
                 .unwrap();
@@ -59,16 +61,16 @@ impl LearningAgent {
     // Mettre à jour la Q-value de l'action choisie pour l'état actuel
     pub fn update_q_value(&mut self, action: &str, reward: f32, next_state: &str) {
         // Vérifier si l'action existe dans la table Q
-        let current_q_value = self.q_table
-            .entry(action.to_string())
+        let current_q_value = self.q_table.entry(action.to_string())
             .or_insert_with(HashMap::new)
             .entry(self.state.clone())
             .or_insert(0.0);
         
         // Calcul de la nouvelle Q-value
         let max_future_q = self.actions.iter()
-            .filter_map(|a| self.q_table.get(a)) // Récupérer les Q-values pour chaque action
-            .filter_map(|action_map| action_map.get(next_state)) // Récupérer la Q-value pour le prochain état
+            .filter_map(|a| {
+                self.q_table.get(a).and_then(|action_map| action_map.get(next_state))
+            }) // Récupérer la Q-value pour le prochain état
             .cloned() // Cloner les valeurs
             .fold(0.0, f32::max); // Trouver la valeur maximale
 
