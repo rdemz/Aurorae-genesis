@@ -28,6 +28,7 @@ mod pattern_extractor; // Importer le module d'extraction de patterns
 mod clippy_integration; // Importer l'intégration de Clippy
 mod update_checker;    // Importer la vérification de mise à jour
 mod reinforcement_learning;  // Moteur d'apprentissage par renforcement
+mod neural_network;  // Importer le réseau de neurones pour la prise de décision
 
 use crate::autonomy::AuroraeCore;
 use crate::founder_income::{set_founder_address, reward_founder};
@@ -48,11 +49,13 @@ use crate::explorer::search_best_rust_chains;
 use crate::alchemy::TokenKind;
 use crate::strategist::Strategist;
 use crate::reinforcement_learning::{LearningAgent}; // Intégration de l'agent RL
+use crate::neural_network::{DecisionNet};  // Importer le réseau de neurones
 
 use crate::knowledge::{KnowledgeBase}; // Utiliser KnowledgeBase pour gérer les patterns
 
 use tokio::time::{sleep, Duration};
 use std::path::Path;
+use tch::{nn, Device};
 
 #[tokio::main]
 async fn main() {
@@ -159,6 +162,11 @@ async fn main() {
     let strategist = Strategist::new("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");
 
     sleep(Duration::from_secs(5)).await;
+
+    // Initialiser le réseau de neurones
+    let vs = nn::VarStore::new(Device::Cpu);
+    let decision_net = DecisionNet::new(&vs, 10, vec![64, 32, 16], 2);
+    let mut optimizer = nn::Adam::default().build(&vs, 1e-3).unwrap();
 
     // Initialiser l'agent d'apprentissage par renforcement
     let mut learning_agent = LearningAgent::new(vec!["generate_code", "refactor_code", "deploy_contract"]);
