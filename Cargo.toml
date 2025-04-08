@@ -3,7 +3,7 @@ name = "aurorae"
 version = "0.1.0"
 edition = "2021"
 authors = ["Aurorae Genesis Project"]
-description = "Un système autonome auto-évolutif capable d'existence indépendante"
+description = "Une entité numérique auto-évolutive qui vit en totale autonomie"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -29,7 +29,3 @@ regex = "1.10"
 [[bin]]
 name = "aurorae"
 path = "aurorae/main.rs"
-
-[lib]
-name = "aurorae_lib"
-path = "aurorae/lib.rs"
