@@ -6,7 +6,8 @@ use ethers::prelude::*;
 use ethers::types::{Address, Bytes};
 use ethers::contract::ContractFactory;
 use ethers::middleware::SignerMiddleware;
-use ethers::signers::{LocalWallet, Wallet, SigningKey};
+use ethers::signers::{LocalWallet, Wallet};
+use k256::ecdsa::SigningKey;
 use ethers::abi::Abi;
 
 use crate::blockchain_core::HttpProvider;
