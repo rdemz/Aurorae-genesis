@@ -1,15 +1,25 @@
 @echo off
+setlocal
 
-REM ╔═══════════════════════════════════════╗
-REM ║       LANCEMENT D'AURORAE++           ║
-REM ╚═══════════════════════════════════════╝
+:: Chargement de l'environnement
+echo [AURORAE++] Chargement du .env...
+if exist .env (
+    for /f "usebackq delims=" %%a in (".env") do set "%%a"
+) else (
+    echo [AURORAE++] ⚠️ .env manquant, certaines variables pourraient échouer.
+)
 
-cd /d %~dp0
+:: Compilation
+echo [AURORAE++] 🔧 Compilation en cours...
+cargo build --release
+if %errorlevel% neq 0 (
+    echo [AURORAE++] ❌ Échec de la compilation
+    exit /b 1
+)
 
-echo.
-echo [AURORAE++] 🚀 Compilation et démarrage...
-echo.
+:: Exécution
+echo [AURORAE++] 🚀 Lancement du moteur vivant...
+target\release\aurorae.exe
 
-cargo run --release --manifest-path Cargo.toml
-
+endlocal
 pause
