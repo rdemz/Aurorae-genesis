@@ -34,9 +34,9 @@ impl Deployer {
 
         // ✅ Parsing du bytecode → Bytes (type ethers)
         let parsed_bytecode = bytecode
-            .parse::<Bytes>()
-            .map_err(|e| format!("Bytecode invalide: {}", e))?;
-
+    .parse::<ethers::types::Bytes>()
+    .map_err(|e| format!("Bytecode invalide: {}", e))?;
+        
         // 🔐 Construction du wallet
         let wallet: LocalWallet = private_key
             .parse()
