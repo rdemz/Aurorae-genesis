@@ -3,7 +3,7 @@
 //! Base de savoir vivante. Stocke les patterns et insights extraits par le module `learning`
 //! pour les rendre accessibles au `generator` et autres composants évolutifs.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{File, create_dir_all};
 use std::io::{Write, Read};
 use std::path::PathBuf;
@@ -23,6 +23,21 @@ pub struct Pattern {
 #[derive(Default, Serialize, Deserialize)]
 pub struct KnowledgeBase {
     pub records: Vec<Pattern>,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct Memory {
+    pub patterns: HashMap<String, Pattern>, // Un dictionnaire pour stocker les patterns par module
+    pub insights: HashMap<String, PatternInsight>, // Un dictionnaire pour stocker les insights par module
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PatternInsight {
+    pub module_name: String,
+    pub functions: usize,
+    pub structs: usize,
+    pub traits: usize,
+    pub enums: usize,
 }
 
 impl KnowledgeBase {
@@ -77,5 +92,28 @@ impl KnowledgeBase {
 impl KnowledgeBase {
     pub fn add_pattern_from_learning(&mut self, pattern: Pattern) {
         self.insert_pattern(pattern);
+    }
+}
+
+// Méthodes d'intégration avec Memory
+impl Memory {
+    // Ajouter un pattern à la mémoire
+    pub fn add_pattern(&mut self, pattern: Pattern) {
+        self.patterns.insert(pattern.module_name.clone(), pattern);
+    }
+
+    // Ajouter un insight à la mémoire
+    pub fn add_insight(&mut self, insight: PatternInsight) {
+        self.insights.insert(insight.module_name.clone(), insight);
+    }
+
+    // Récupérer un pattern par son nom de module
+    pub fn get_pattern(&self, module_name: &str) -> Option<&Pattern> {
+        self.patterns.get(module_name)
+    }
+
+    // Récupérer un insight par son nom de module
+    pub fn get_insight(&self, module_name: &str) -> Option<&PatternInsight> {
+        self.insights.get(module_name)
     }
 }
