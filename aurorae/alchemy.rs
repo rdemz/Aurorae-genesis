@@ -1,7 +1,8 @@
-//! alchemy.rs — Mécanisme de forge des tokens
+//! alchemy.rs — Mécanisme de forge des tokens pour AURORAE++
 
 use uuid::Uuid;
 use std::collections::HashMap;
+use chrono::Utc;
 
 #[derive(Clone)]
 pub enum TokenKind {
@@ -20,6 +21,7 @@ pub struct SmartToken {
     pub creator_share: f64,
 }
 
+#[derive(Default)] // ✅ Correction : ajout du trait Default
 pub struct AlchemyEngine {
     pub tokens: Vec<SmartToken>,
 }
@@ -41,7 +43,7 @@ impl AlchemyEngine {
             name: name.to_string(),
             kind,
             metadata: HashMap::new(),
-            created_at: chrono::Utc::now().to_rfc3339(),
+            created_at: Utc::now().to_rfc3339(),
             supply,
             creator_share,
         };
@@ -51,7 +53,7 @@ impl AlchemyEngine {
 
     pub fn list_tokens(&self) {
         for t in &self.tokens {
-            println!("- {} • {}", t.name, t.supply);
+            println!("- {} • {} tokens", t.name, t.supply);
         }
     }
 }
