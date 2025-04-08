@@ -209,7 +209,7 @@ impl EconomyEngine {
         let innovation_id = format!("innovation_{}", Uuid::new_v4().simple().to_string().chars().take(8).collect::<String>());
         
         let mut rng = rand::thread_rng();
-        let rate = 0.01 + (rand::Rng::gen_range(&mut rng, 0.0..0.03)); // Entre 1-4%
+        let rate = 0.01 + (rng.gen::<f64>() * 0.03); // Entre 1-4%
         self.revenue_streams.insert(innovation_id.clone(), rate);
         
         self.innovation_bonus *= 1.05; // Bonus d'innovation croissant
