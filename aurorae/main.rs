@@ -172,7 +172,7 @@ async fn main() {
     // Initialiser l'agent d'apprentissage par renforcement
     let mut learning_agent = LearningAgent::new(
         vec!["generate_code".to_string(), "refactor_code".to_string(), "deploy_contract".to_string()],
-        "initial_state".to_string() // Correction du type
+        "initial_state"  // Correction ici : maintenant c'est un &str
     );
 
     loop {
