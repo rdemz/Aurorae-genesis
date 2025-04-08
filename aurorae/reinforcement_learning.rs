@@ -65,8 +65,9 @@ impl LearningAgent {
             .or_insert_with(HashMap::new)
             .entry(self.state.clone())
             .or_insert(0.0);
-        
+
         // Calcul de la nouvelle Q-value
+        // D'abord, calculons la valeur maximale des Q-values futures, sans emprunter immuablement pendant l'emprunt mutable
         let max_future_q = self.actions.iter()
             .filter_map(|a| {
                 self.q_table.get(a).and_then(|action_map| action_map.get(next_state))
