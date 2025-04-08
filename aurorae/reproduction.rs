@@ -46,8 +46,9 @@ impl ReproductionEngine {
             generation, instance.id, purpose
         );
 
+        // Pas besoin de clone ici
         self.children.push(instance.clone());
-        self.save();
+        self.save(); // Sauvegarder après ajout
         instance
     }
 
@@ -55,12 +56,12 @@ impl ReproductionEngine {
     pub fn destroy_instance(&mut self, id: &Uuid) {
         self.children.retain(|i| &i.id != id);
         println!("[AURORAE++] 🪓 Instance détruite : {}", id);
-        self.save();
+        self.save(); // Sauvegarder après suppression
     }
 
     /// 🧬 Obtenir la génération la plus élevée
     fn get_max_generation(&self) -> u32 {
-        self.children.iter().map(|i| i.generation).max().unwrap_or(0)
+        self.children.iter().map(|i| i.generation).max().unwrap_or_default()
     }
 
     /// 🧬 Récupère l'ID du dernier enfant comme parent potentiel
@@ -96,11 +97,22 @@ impl ReproductionEngine {
     /// 💾 Sauvegarde automatique en JSON local
     pub fn save(&self) {
         let dir = Path::new("aurorae_state");
-        if create_dir_all(dir).is_ok() {
-            let file = File::create(dir.join("instances.json"));
-            if let Ok(f) = file {
+        if let Err(e) = create_dir_all(dir) {
+            eprintln!("[AURORAE++] Erreur lors de la création du répertoire: {}", e);
+            return;
+        }
+
+        let file_path = dir.join("instances.json");
+        let file = File::create(&file_path);
+        match file {
+            Ok(f) => {
                 let writer = BufWriter::new(f);
-                let _ = serde_json::to_writer_pretty(writer, &self);
+                if let Err(e) = serde_json::to_writer_pretty(writer, &self) {
+                    eprintln!("[AURORAE++] Erreur lors de la sauvegarde : {}", e);
+                }
+            }
+            Err(e) => {
+                eprintln!("[AURORAE++] Impossible de créer le fichier de sauvegarde : {}", e);
             }
         }
     }
@@ -108,11 +120,15 @@ impl ReproductionEngine {
     /// 🔄 Chargement automatique depuis le disque
     pub fn load() -> Option<Self> {
         let path = Path::new("aurorae_state/instances.json");
-        if let Ok(file) = File::open(path) {
-            let reader = BufReader::new(file);
-            serde_json::from_reader(reader).ok()
-        } else {
-            None
+        match File::open(path) {
+            Ok(file) => {
+                let reader = BufReader::new(file);
+                serde_json::from_reader(reader).ok()
+            }
+            Err(e) => {
+                eprintln!("[AURORAE++] Erreur lors du chargement des instances : {}", e);
+                None
+            }
         }
     }
 }
