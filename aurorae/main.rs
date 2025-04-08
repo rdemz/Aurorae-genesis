@@ -49,6 +49,7 @@ use crate::strategist::Strategist;
 use crate::knowledge::{KnowledgeBase}; // Utiliser KnowledgeBase pour gérer les patterns
 
 use tokio::time::{sleep, Duration};
+use std::path::Path;
 
 #[tokio::main]
 async fn main() {
@@ -67,8 +68,10 @@ async fn main() {
     let patterns = scan_feed_and_learn(&mut knowledge_base); // Apprendre et ajouter à la mémoire
     println!("[AURORAE++] 📚 Patterns GitHub appris : {}", patterns.len());
 
+    // Exemple de code à analyser
+    let code = "let x = 10;";
+
     // Analyser le code généré avec rust_analyzer
-    let code = "let x = 10;"; // Exemple de code à analyser
     let analysis_result = rust_analyzer::analyze(code);
     if !analysis_result.is_valid {
         println!("[AURORAE++] 🚨 Analyse échouée : {}", analysis_result.warnings);
@@ -76,23 +79,24 @@ async fn main() {
         println!("[AURORAE++] ✅ Analyse réussie");
     }
 
-    // Refactorer le code généré avec rustfmt
+    // Refactorer le code généré avec rustfmt via refactor.rs
     let refactored_code = refactor::refactor_code(code);
     println!("[AURORAE++] Code après refactorisation : {}", refactored_code);
 
-    // Extraire les patterns de code à partir des projets clonés
-    let dir = Path::new("path/to/your/github/repo");
+    // Extraire les patterns de code à partir des projets clonés avec pattern_extractor.rs
+    let dir = Path::new("path/to/your/github/repo");  // Assurez-vous de mettre le bon chemin
     let extracted_patterns = pattern_extractor::extract_patterns_from_directory(&dir);
     for pattern in extracted_patterns {
         println!("[AURORAE++] 🎯 Pattern extrait : {:?}", pattern);
     }
 
-    // Analyser le code avec clippy pour la qualité du code
+    // Analyser le code avec clippy pour la qualité du code via clippy_integration.rs
     let clippy_result = clippy_integration::run_clippy(code);
     if !clippy_result.is_valid {
         println!("[AURORAE++] Clippy a trouvé des avertissements : {}", clippy_result.warnings);
     }
 
+    // Déployer le contrat
     let provider = BlockchainInterface::get_http_provider("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY").unwrap();
     let address = Deployer::deploy_contract(
         provider,
@@ -106,6 +110,7 @@ async fn main() {
         Err(e) => println!("[AURORAE++] ❌ Erreur déploiement : {}", e),
     }
 
+    // Initialisation du core et autres modules
     let mut core = AuroraeCore::new();
     core.economy.initialize();
     core.intelligence.initialize();
