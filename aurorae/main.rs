@@ -22,6 +22,11 @@ mod crawler;
 mod security;
 mod strategist;
 
+mod rust_analyzer;      // Importer le module d'analyse
+mod refactor;           // Importer le module de refactoring
+mod pattern_extractor; // Importer le module d'extraction de patterns
+mod clippy_integration; // Importer l'intégration de Clippy
+
 use crate::autonomy::AuroraeCore;
 use crate::founder_income::{set_founder_address, reward_founder};
 use crate::brain::boot_brain;
@@ -61,6 +66,32 @@ async fn main() {
     let mut knowledge_base = KnowledgeBase::load(); // Charger la base de savoir existante
     let patterns = scan_feed_and_learn(&mut knowledge_base); // Apprendre et ajouter à la mémoire
     println!("[AURORAE++] 📚 Patterns GitHub appris : {}", patterns.len());
+
+    // Analyser le code généré avec rust_analyzer
+    let code = "let x = 10;"; // Exemple de code à analyser
+    let analysis_result = rust_analyzer::analyze(code);
+    if !analysis_result.is_valid {
+        println!("[AURORAE++] 🚨 Analyse échouée : {}", analysis_result.warnings);
+    } else {
+        println!("[AURORAE++] ✅ Analyse réussie");
+    }
+
+    // Refactorer le code généré avec rustfmt
+    let refactored_code = refactor::refactor_code(code);
+    println!("[AURORAE++] Code après refactorisation : {}", refactored_code);
+
+    // Extraire les patterns de code à partir des projets clonés
+    let dir = Path::new("path/to/your/github/repo");
+    let extracted_patterns = pattern_extractor::extract_patterns_from_directory(&dir);
+    for pattern in extracted_patterns {
+        println!("[AURORAE++] 🎯 Pattern extrait : {:?}", pattern);
+    }
+
+    // Analyser le code avec clippy pour la qualité du code
+    let clippy_result = clippy_integration::run_clippy(code);
+    if !clippy_result.is_valid {
+        println!("[AURORAE++] Clippy a trouvé des avertissements : {}", clippy_result.warnings);
+    }
 
     let provider = BlockchainInterface::get_http_provider("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY").unwrap();
     let address = Deployer::deploy_contract(
