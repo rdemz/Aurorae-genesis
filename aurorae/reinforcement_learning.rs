@@ -38,13 +38,13 @@ impl LearningAgent {
         } else {
             let best_action = self.actions.iter()
                 .max_by(|a, b| {
-                    // Créer une valeur par défaut pour les clés absentes
-                    let binding = HashMap::new();
-
-                    let a_q_value = self.q_table.get(*a).unwrap_or(&binding)
-                        .get(&self.state).unwrap_or(&0.0);
-                    let b_q_value = self.q_table.get(*b).unwrap_or(&binding)
-                        .get(&self.state).unwrap_or(&0.0);
+                    // Créer des références indépendantes pour éviter les emprunts multiples
+                    let a_q_value = self.q_table.get(*a)
+                        .map(|action_map| action_map.get(&self.state).unwrap_or(&0.0))
+                        .unwrap_or(&0.0);
+                    let b_q_value = self.q_table.get(*b)
+                        .map(|action_map| action_map.get(&self.state).unwrap_or(&0.0))
+                        .unwrap_or(&0.0);
 
                     a_q_value.partial_cmp(&b_q_value).unwrap_or(std::cmp::Ordering::Equal)
                 })
@@ -60,6 +60,7 @@ impl LearningAgent {
             .entry(self.state.clone())
             .or_insert(0.0);
 
+        // Utiliser des références immutables pour les actions afin d'éviter les emprunts multiples
         let max_future_q = self.actions.iter()
             .filter_map(|a| self.q_table.get(a))
             .filter_map(|action_map| action_map.get(next_state))
