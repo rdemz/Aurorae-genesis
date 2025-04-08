@@ -44,7 +44,7 @@ pub fn scan_feed_and_learn(knowledge_base: &mut KnowledgeBase) {
                 let pattern = stats.to_pattern();
                 
                 // Ajouter les patterns extraits à la mémoire vivante
-                knowledge_base.add_pattern(pattern);  // Utilisation correcte de `add_pattern`
+                knowledge_base.add_pattern_from_learning(pattern);  // Utilisation corrigée
             }
         }
     }
@@ -84,7 +84,7 @@ fn analyze_rust_files(dir: &Path) -> PatternInsight {
     }
 }
 
-/// Récupère tous les fichiers .rs d’un projet donné
+/// Récupère tous les fichiers .rs d'un projet donné
 fn find_rust_files(base: &Path) -> Vec<PathBuf> {
     let mut results = vec![];
     if let Ok(entries) = read_dir(base) {
