@@ -7,7 +7,7 @@ use std::fs::{read_to_string, read_dir};
 use std::path::{Path, PathBuf};
 use regex::Regex;
 use std::collections::HashMap;
-use crate::knowledge::{Memory, Pattern}; // Utilisation de `knowledge.rs` pour stocker les patterns
+use crate::knowledge::{KnowledgeBase, Pattern}; // Importer KnowledgeBase et Pattern du module knowledge
 
 const FEED_PATH: &str = "C:\\Users\\admin\\.github_feed";
 
@@ -44,7 +44,7 @@ pub fn scan_feed_and_learn(knowledge_base: &mut KnowledgeBase) {
                 let pattern = stats.to_pattern();
                 
                 // Ajouter les patterns extraits à la mémoire vivante
-                memory.add_pattern(pattern);
+                knowledge_base.add_pattern(pattern);  // Correction ici pour utiliser `knowledge_base`
             }
         }
     }
@@ -99,4 +99,3 @@ fn find_rust_files(base: &Path) -> Vec<PathBuf> {
     }
     results
 }
-
