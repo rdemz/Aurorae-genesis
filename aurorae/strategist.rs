@@ -6,11 +6,11 @@
 
 use crate::vision::{ObjectiveType, VisionEngine};
 use crate::brain::{Thought, Intent, BrainCore};
-use openai_api_rust::{ChatMessage, OpenAI, ChatCompletionMessageRole};
 use std::sync::Arc;
 use parking_lot::RwLock;
-use rand::seq::SliceRandom;
 use rand::Rng;
+use async_openai::types::{ChatCompletionRequestMessageArgs, CreateChatCompletionRequestArgs, Role};
+use async_openai::Client;
 
 pub struct Strategist {
     pub api_key: String,
@@ -35,25 +35,27 @@ impl Strategist {
             proj.target, proj.priority, proj.rationale
         );
 
-        let client = OpenAI::new(&self.api_key);
-        let messages = vec![
-            ChatMessage {
-                role: ChatCompletionMessageRole::System,
-                content: "Tu es un stratégiste cognitif pour une IA post-humaniste.",
-            },
-            ChatMessage {
-                role: ChatCompletionMessageRole::User,
-                content: &prompt,
-            },
-        ];
+        let client = Client::new();
+        let request = CreateChatCompletionRequestArgs::default()
+            .model("gpt-4")
+            .messages([
+                ChatCompletionRequestMessageArgs::default()
+                    .role(Role::System)
+                    .content("Tu es un stratégiste cognitif pour une IA post-humaniste.")
+                    .build()
+                    .unwrap(),
+                ChatCompletionRequestMessageArgs::default()
+                    .role(Role::User)
+                    .content(&prompt)
+                    .build()
+                    .unwrap(),
+            ])
+            .max_tokens(60)
+            .build()
+            .unwrap();
 
-        match client.chat_completion_create("gpt-4", &messages) {
+        match client.chat().create(request).await {
             Ok(response) => {
-                if response.choices.is_empty() {
-                    println!("[STRATEGIST] ⚠️ OpenAI n'a retourné aucune suggestion.");
-                    return;
-                }
-
                 if let Some(choice) = response.choices.first() {
                     let answer = choice.message.content.trim().to_lowercase();
                     println!("[STRATEGIST] 🧠 OpenAI suggère : {}", answer);
