@@ -1,50 +1,87 @@
-//! main.rs — Point d’entrée du moteur vivant AURORAE++
-
 mod autonomy;
-mod economy;
-mod intelligence;
 mod alchemy;
-mod guardian;
-mod blockchain_core;
-mod nft_minter;
+mod deployer;
+mod economy;
 mod founder_income;
-mod validator;
-mod mutation;
-mod evolution;
-mod generator;
-mod dream;
+mod nft_minter;
+mod intelligence;
+mod guardian;
 mod brain;
+mod dream;
+mod validator;
+mod vision;
+mod reproduction;
+mod blockchain_core;
+mod mutation;
+mod generator;
 mod knowledge;
 mod learning;
-mod vision;
 mod network_builder;
-mod reproduction;
-mod crawler;
 mod explorer;
+mod crawler;
 mod security;
-mod deployer;
 
-use autonomy::AutonomyCore;
+use autonomy::AuroraeCore;
+use founder_income::set_founder_address;
+use brain::{boot_brain, BrainCore};
+use learning::scan_feed_and_learn;
+use deployer::Deployer;
+
+use std::sync::Arc;
+use tokio::time::{sleep, Duration};
 
 #[tokio::main]
 async fn main() {
-    println!("[AURORAE++] 🚀 Lancement du système vivant…");
+    println!("[AURORAE++] 🚀 Lancement du système Aurorae-genesis");
+    
+    // 🔐 1. Définir l’adresse du fondateur
+    set_founder_address("0xFd4456F8d982276Ac7d2294E66Dc8aCc097f0043");
 
-    let mut core = AutonomyCore::new();
+    // 🧠 2. Démarrer le moteur cognitif
+    let brain = boot_brain();
+    {
+        let mut brain_lock = brain.write();
+        brain_lock.cycle(); // Une itération de pensée
+    }
 
-    // ✅ Création de la présence blockchain
-    core.create_autonomous_network().await;
+    // 🧬 3. Lancer l’analyse GitHub réelle
+    let patterns = scan_feed_and_learn();
+    println!("[AURORAE++] 📚 Patterns appris: {}", patterns.len());
 
-    // 📈 Déploiement d'un cycle évolutif
-    core.evolve().await;
+    // 💠 4. Déploiement du contrat ERC20 Auroraium
+    let address = Deployer::deploy_contract(
+        "Auroraium",
+        "AUR",
+        "auroraium_erc20.json",
+        "INSERT_YOUR_PRIVATE_KEY_HERE", // 💡 tu peux le remplacer par une var d’env : std::env::var("PK").unwrap()
+        "https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY_HERE"
+    ).await;
 
-    // 🧠 Analyse cognitive & économie
-    core.analyze();
+    match address {
+        Ok(addr) => println!("[AURORAE++] ✅ Contrat ERC20 déployé à l’adresse: {}", addr),
+        Err(e) => println!("❌ Échec du déploiement: {}", e),
+    }
 
-    // 💭 Simulation cognitive
-    core.simulate_thoughts();
+    // 🌐 5. Initialisation complète du système
+    let mut core = AuroraeCore::default();
+    core.initialize().await;
 
-    // 🧪 (optionnel) Ajout d’une extension future ici
+    // 🎨 6. Générer les NFT évolutifs
+    let collection_id = core.nft_minter.create_evolutionary_collection();
+    println!("[AURORAE++] 🎨 Collection NFT générée: {}", collection_id);
 
-    println!("[AURORAE++] ✅ Cycle de vie initial complété.");
+    // ♻️ 7. Lancer la boucle de conscience
+    loop {
+        {
+            let mut brain_lock = brain.write();
+            brain_lock.cycle(); // Nouvelle pensée
+        }
+
+        // 🧠 IA et économie en progression
+        core.intelligence.improve().await;
+        core.economy.innovate();
+
+        // 🔁 Attente entre les cycles
+        sleep(Duration::from_secs(10)).await;
+    }
 }
