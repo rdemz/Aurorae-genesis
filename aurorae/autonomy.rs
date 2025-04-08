@@ -30,7 +30,7 @@ impl AutonomyCore {
 
     pub async fn create_blockchain_presence(&self) -> String {
         let chain_id = format!("chain-{}", Uuid::new_v4());
-        println!("[AURORAE++] 🔗 Chaîne créée : {chain_id}");
+        println!("[AURORAE++] 🔗 Chaîne autonome créée : {chain_id}");
         chain_id
     }
 
@@ -40,31 +40,31 @@ impl AutonomyCore {
         self.economy.initialize();
         self.intelligence.initialize();
 
-        let value = 1000000.0;
-        self.economy.simulate_cycle(value).await;
+        let starting_capital = 1_000_000.0;
+        self.economy.simulate_cycle(starting_capital).await;
 
         let _token_id = self
             .forge
-            .mint_token("Auroraium", TokenKind::Fungible, 1000000, 0.05)
+            .mint_token("Auroraium", TokenKind::Fungible, 1_000_000, 0.05)
             .await;
 
-        println!("[AURORAE++] ✅ Réseau autonome initialisé.");
+        println!("[AURORAE++] ✅ Réseau vivant initialisé avec succès.");
     }
 
     pub async fn evolve(&mut self) {
         self.intelligence.improve().await;
         self.economy.innovate();
 
-        let bonus = 1000.0;
-        self.economy.add_funds(bonus);
+        let bonus_funding = 1000.0;
+        self.economy.add_funds(bonus_funding);
 
-        println!("[AURORAE++] 📈 Autonomie optimisée avec succès.");
+        println!("[AURORAE++] 🧠⚙️ Système auto-évolué avec succès.");
     }
 
     pub fn analyze(&self) {
         let level = self.intelligence.get_intelligence_level();
         println!(
-            "[AURORAE++] 🧠 Intelligence actuelle : niveau {}",
+            "[AURORAE++] 📊 Analyse cognitive : niveau actuel {:.2}",
             level
         );
 
@@ -73,5 +73,6 @@ impl AutonomyCore {
 
     pub fn simulate_thoughts(&self) {
         self.intelligence.simulate_thought();
+        println!("[AURORAE++] 🧬 Pensées autonomes simulées.");
     }
 }
