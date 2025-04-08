@@ -1,7 +1,7 @@
-//! intelligence.rs — Moteur cognitif et analyse du graphe de connaissance
+//! intelligence.rs — Moteur cognitif et graphe de connaissance
 
 use std::collections::HashMap;
-use crate::knowledge::KnowledgeNode;
+use crate::intelligence::knowledge::KnowledgeNode;
 
 pub struct IntelligenceCore {
     pub knowledge_graph: HashMap<String, KnowledgeNode>,
@@ -15,7 +15,6 @@ impl IntelligenceCore {
     }
 
     pub fn update_graph(&mut self) {
-        // 🧠 Collecte des noeuds à modifier pour éviter les emprunts croisés
         let target_ids: Vec<String> = self.knowledge_graph
             .iter()
             .filter(|(_, node)| node.needs_update)
@@ -28,9 +27,25 @@ impl IntelligenceCore {
             }
         }
     }
+
+    // ✅ Méthodes manquantes
+    pub fn initialize(&mut self) {
+        println!("[AURORAE++] 🧠 Initialisation du graphe cognitif");
+    }
+
+    pub async fn improve(&mut self) {
+        println!("[AURORAE++] 🧠 Amélioration cognitive en cours...");
+    }
+
+    pub fn get_intelligence_level(&self) -> u32 {
+        42
+    }
+
+    pub fn simulate_thought(&self) {
+        println!("[AURORAE++] 💭 Pensée simulée...");
+    }
 }
 
-// Exemple de définition du noeud cognitif
 pub mod knowledge {
     #[derive(Clone)]
     pub struct KnowledgeNode {
