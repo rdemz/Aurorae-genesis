@@ -3,6 +3,7 @@ use chrono::Utc;
 use uuid::Uuid;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use rand::Rng;
 
 use crate::founder_income::reward_founder;
 
