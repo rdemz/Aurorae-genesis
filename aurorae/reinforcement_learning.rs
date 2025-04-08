@@ -38,10 +38,14 @@ impl LearningAgent {
         } else {
             let best_action = self.actions.iter()
                 .max_by(|a, b| {
-                    let a_q_value = self.q_table.get(*a).unwrap_or(&HashMap::new())
+                    // Créer une valeur par défaut pour les clés absentes
+                    let binding = HashMap::new();
+
+                    let a_q_value = self.q_table.get(*a).unwrap_or(&binding)
                         .get(&self.state).unwrap_or(&0.0);
-                    let b_q_value = self.q_table.get(*b).unwrap_or(&HashMap::new())
+                    let b_q_value = self.q_table.get(*b).unwrap_or(&binding)
                         .get(&self.state).unwrap_or(&0.0);
+
                     a_q_value.partial_cmp(&b_q_value).unwrap_or(std::cmp::Ordering::Equal)
                 })
                 .unwrap();
