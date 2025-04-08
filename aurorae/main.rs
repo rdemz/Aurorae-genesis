@@ -7,7 +7,7 @@ mod nft_minter;
 mod intelligence;
 mod guardian;
 mod brain;
-mod dream;
+mod dream;  // Importer le module dream
 mod validator;
 mod vision;
 mod reproduction;
@@ -29,7 +29,7 @@ use crate::learning::scan_feed_and_learn;
 use crate::deployer::Deployer;
 use crate::blockchain_core::BlockchainInterface;
 use crate::guardian::GuardianSentinel;
-use crate::dream::DreamEngine;
+use crate::dream::DreamEngine;  // Importer DreamEngine
 use crate::reproduction::ReproductionEngine;
 use crate::validator::check_integrity;
 use crate::vision::VisionEngine;
@@ -84,8 +84,9 @@ async fn main() {
     let mut guardian = GuardianSentinel::new();
     guardian.register_module("autonomy");
 
+    // Créer un DreamEngine et appeler la fonction imagine de manière asynchrone
     let mut dreamer = DreamEngine::new();
-    dreamer.imagine("AI Dream 1", "Créer sa propre chaîne secondaire", "https://image-url.com/dream.jpg");
+    dreamer.imagine("AI Dream 1", "Créer sa propre chaîne secondaire", "https://image-url.com/dream.jpg").await;
 
     let mut vision = VisionEngine::new();
     vision.add_projection(
