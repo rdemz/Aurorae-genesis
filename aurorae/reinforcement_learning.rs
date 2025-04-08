@@ -5,7 +5,7 @@ use rand::Rng; // Pour générer des valeurs aléatoires
 pub struct LearningAgent {
     pub actions: Vec<String>, // Liste des actions possibles
     pub state: String, // L'état actuel du système
-    pub q_table: HashMap<String, f32>, // Tableau des Q-values pour chaque action
+    pub q_table: HashMap<String, HashMap<String, f32>>, // Tableau des Q-values pour chaque état et action
     pub learning_rate: f32, // Taux d'apprentissage
     pub discount_factor: f32, // Facteur de discount (pour l'importance des récompenses futures)
     pub exploration_rate: f32, // Taux d'exploration (pour choisir des actions aléatoires)
@@ -13,15 +13,18 @@ pub struct LearningAgent {
 
 impl LearningAgent {
     // Création d'un nouvel agent d'apprentissage
-    pub fn new(actions: Vec<String>) -> Self {
+    pub fn new(actions: Vec<String>, initial_state: &str) -> Self {
         let mut q_table = HashMap::new();
+        // Initialiser la table Q avec des valeurs nulles pour chaque combinaison état-action
         for action in &actions {
-            q_table.insert(action.clone(), 0.0); // Initialiser toutes les actions avec une Q-value de 0
+            let mut action_map = HashMap::new();
+            action_map.insert(initial_state.to_string(), 0.0);
+            q_table.insert(action.clone(), action_map);
         }
 
         LearningAgent {
             actions,
-            state: "start".to_string(),
+            state: initial_state.to_string(),
             q_table,
             learning_rate: 0.1,
             discount_factor: 0.9,
@@ -39,34 +42,53 @@ impl LearningAgent {
             let action = &self.actions[rng.gen_range(0..self.actions.len())];
             action.to_string()
         } else {
-            // Exploitation : choisir l'action avec la meilleure Q-value
-            let best_action = self.q_table.iter().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()).unwrap().0;
+            // Exploitation : choisir l'action avec la meilleure Q-value pour l'état actuel
+            let best_action = self.actions.iter()
+                .max_by(|a, b| {
+                    let a_q_value = *self.q_table.get(*a).unwrap_or(&HashMap::new())
+                        .get(&self.state).unwrap_or(&0.0);
+                    let b_q_value = *self.q_table.get(*b).unwrap_or(&HashMap::new())
+                        .get(&self.state).unwrap_or(&0.0);
+                    a_q_value.partial_cmp(&b_q_value).unwrap_or(std::cmp::Ordering::Equal)
+                })
+                .unwrap();
             best_action.to_string()
         }
     }
 
-    // Mettre à jour la Q-value de l'action choisie
+    // Mettre à jour la Q-value de l'action choisie pour l'état actuel
     pub fn update_q_value(&mut self, action: &str, reward: f32, next_state: &str) {
-        let old_q_value = self.q_table.get(action).unwrap_or(&0.0);
-        let future_q_value = self.q_table.get(next_state).unwrap_or(&0.0);
+        let current_q_value = self.q_table
+            .entry(action.to_string())
+            .or_insert_with(HashMap::new)
+            .entry(self.state.clone())
+            .or_insert(0.0);
+        
+        // Calcul de la nouvelle Q-value
+        let max_future_q = self.actions.iter()
+            .filter_map(|a| self.q_table.get(*a))
+            .filter_map(|action_map| action_map.get(next_state))
+            .cloned()
+            .fold(0.0, f32::max);
 
-        // Mettre à jour la Q-value de l'action selon la formule : 
-        // Q(s, a) = Q(s, a) + α [R + γ max(Q(s', a')) - Q(s, a)]
-        let new_q_value = old_q_value + self.learning_rate * (reward + self.discount_factor * future_q_value - old_q_value);
-        self.q_table.insert(action.to_string(), new_q_value);
+        let new_q_value = current_q_value + self.learning_rate * (reward + self.discount_factor * max_future_q - *current_q_value);
+        *current_q_value = new_q_value;
     }
 
     // Appliquer la logique d'apprentissage pour chaque cycle
     pub fn learn(&mut self, reward: f32, next_state: &str) {
         let action = self.choose_action();
         self.update_q_value(&action, reward, next_state);
+        self.state = next_state.to_string(); // Mettre à jour l'état après l'action
     }
 
     // Affichage de la Q-table pour déboguer et observer l'apprentissage
     pub fn print_q_table(&self) {
         println!("[AURORAE++] Q-table:");
-        for (action, q_value) in &self.q_table {
-            println!("Action: {}, Q-value: {}", action, q_value);
+        for (action, action_map) in &self.q_table {
+            for (state, q_value) in action_map {
+                println!("Action: {}, State: {}, Q-value: {}", action, state, q_value);
+            }
         }
     }
 }
