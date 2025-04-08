@@ -22,7 +22,7 @@ mod explorer;
 mod crawler;
 mod security;
 
-use crate::autonomy::core::AuroraeCore;
+use crate::autonomy::core::AuroraeCore; // Corrected import path
 use crate::founder_income::set_founder_address;
 use crate::brain::boot_brain;
 use crate::learning::scan_feed_and_learn;
@@ -51,11 +51,13 @@ async fn main() {
 
     // 🌐 Déploiement ERC20 via ALCHEMY
     let provider = BlockchainInterface::get_http_provider("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY").unwrap();
+    
+    // Corrected function call with 4 arguments instead of 5
     let address = Deployer::deploy_contract(
         provider,
-        "Auroraium",
-        "AUR",
-        "auroraium_erc20.json"
+        "INSERT_YOUR_PRIVATE_KEY_HERE", // Added private key as the correct second argument
+        "auroraium_erc20.json",         // ABI path
+        "auroraium_bytecode.json"       // Bytecode path
     ).await;
 
     match address {
