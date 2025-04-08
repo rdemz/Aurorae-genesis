@@ -1,9 +1,9 @@
 use alloy_primitives::{Address, U256};
 use alloy_provider::HttpProvider;
-use std::str::FromStr;
+use std::collections::HashMap;
 use uuid::Uuid;
 use chrono::Utc;
-use std::collections::HashMap;
+use rand::Rng;
 
 use crate::founder_income::reward_founder;
 
@@ -73,11 +73,11 @@ impl AlchemyForge {
         self.tokens.insert(name.to_string(), token);
         
         // Simuler le calcul de récompense
-        let reward = (supply / 100) as u64; // 1% comme récompense
+        let reward = (supply / 100) as f64; // 1% comme récompense
         println!("[AURORAE++] 💰 Récompense générée: {} unités", reward);
         
         // Récompenser le fondateur
-        reward_founder(reward as f64);
+        reward_founder(reward);
         
         // Incrémenter le compteur de transactions
         self.transactions_total += 1;
@@ -88,15 +88,9 @@ impl AlchemyForge {
     }
     
     pub async fn get_balance(&self, address: &str) -> Result<U256, String> {
-        match Address::from_str(address) {
-            Ok(_addr) => {
-                // Dans une implémentation réelle, appellerait eth_getBalance
-                // Pour l'instant, retourne un solde simulé
-                let simulated_balance = U256::from(1000000000000000000u64); // 1 ETH
-                Ok(simulated_balance)
-            },
-            Err(_) => Err("Adresse Ethereum invalide".to_string()),
-        }
+        // Simuler un appel pour obtenir le solde
+        let simulated_balance = U256::from(1000000000000000000u64); // 1 ETH
+        Ok(simulated_balance)
     }
     
     pub async fn transfer_token(&mut self, token_name: &str, amount: u64, to: &str) -> Result<String, String> {
@@ -125,7 +119,7 @@ impl AlchemyForge {
         }
     }
     
-    pub async fn create_liquidity_pool(&mut self, token1: &str, token2: &str, amount1: u64, amount2: u64) -> Result<String, String> {
+    pub async fn create_liquidity_pool(&mut self, token1: &str, token2: &str, _amount1: u64, _amount2: u64) -> Result<String, String> {
         if !self.tokens.contains_key(token1) || !self.tokens.contains_key(token2) {
             return Err("Un ou plusieurs tokens n'existent pas".to_string());
         }
