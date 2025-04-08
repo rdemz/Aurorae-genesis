@@ -58,6 +58,7 @@ impl LearningAgent {
 
     // Mettre à jour la Q-value de l'action choisie pour l'état actuel
     pub fn update_q_value(&mut self, action: &str, reward: f32, next_state: &str) {
+        // Vérifier si l'action existe dans la table Q
         let current_q_value = self.q_table
             .entry(action.to_string())
             .or_insert_with(HashMap::new)
@@ -66,12 +67,13 @@ impl LearningAgent {
         
         // Calcul de la nouvelle Q-value
         let max_future_q = self.actions.iter()
-            .filter_map(|a| self.q_table.get(*a))
-            .filter_map(|action_map| action_map.get(next_state))
-            .cloned()
-            .fold(0.0, f32::max);
+            .filter_map(|a| self.q_table.get(*a)) // Récupérer les Q-values pour chaque action
+            .filter_map(|action_map| action_map.get(next_state)) // Récupérer la Q-value pour le prochain état
+            .cloned() // Cloner les valeurs
+            .fold(0.0, f32::max); // Trouver la valeur maximale
 
-        let new_q_value = current_q_value + self.learning_rate * (reward + self.discount_factor * max_future_q - *current_q_value);
+        // Mise à jour de la Q-value
+        let new_q_value = *current_q_value + self.learning_rate * (reward + self.discount_factor * max_future_q - *current_q_value);
         *current_q_value = new_q_value;
     }
 
