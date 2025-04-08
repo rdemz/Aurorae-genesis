@@ -31,7 +31,7 @@ flate2 = "1.0"
 tar = "0.4"
 
 # 🧠 INTELLIGENCE STRATÉGIQUE
-async-openai = "0.14" ✅
+async-openai = "0.14" 
 # 🔧 OUTILS COMPLÉMENTAIRES
 regex = "1.10"
 lazy_static = "1.4"
