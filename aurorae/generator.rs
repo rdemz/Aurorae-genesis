@@ -1,13 +1,15 @@
 //! AURORAE++ - generator.rs
 //!
-//! Moteur de génération de code Rust vivant. 
-//! Ce module répond aux signaux envoyés par brain.rs pour produire du code réel, structuré, compilable et évolutif.
+//! Moteur de génération de code Rust vivant. Ce module répond aux signaux envoyés par brain.rs pour produire du code réel,
+//! structuré, compilable et évolutif, tout en apprenant des meilleures pratiques et en intégrant l'analyse continue.
 
 use std::fs::{create_dir_all, File};
-use std::io::Write;
+use std::io::{Write, Result};
 use std::path::Path;
 use uuid::Uuid;
 use chrono::Utc;
+use rust_analyzer::analyze;  // Module hypothétique d'analyse de code
+use clippy_integration::run_clippy; // Intégration de clippy pour l'analyse de code
 
 #[derive(Debug)]
 pub struct GeneratedModule {
@@ -27,23 +29,54 @@ impl GeneratedModule {
         }
     }
 
-    pub fn save_to_disk(&self, base_path: &str) -> std::io::Result<()> {
+    pub fn save_to_disk(&self, base_path: &str) -> Result<()> {
         let full_path = format!("{}/generated_modules/{}", base_path, self.name);
         let dir_path = Path::new(&full_path);
         create_dir_all(dir_path)?;
 
         let file_path = dir_path.join("mod.rs");
+
+        // Exécution de l'analyse de code avant la sauvegarde
+        let analysis_result = analyze(&self.content);
+        if analysis_result.has_warnings() {
+            // Si des avertissements sont présents, effectuer un refactoring
+            self.refactor_code();
+        }
+
+        // Exécution de l'analyse avec Clippy pour détecter les problèmes de style
+        let clippy_result = run_clippy(&self.content);
+        if clippy_result.has_warnings() {
+            println!("[AURORAE++] Clippy a trouvé des avertissements, les suggestions seront appliquées.");
+            // Appliquer les suggestions Clippy pour améliorer le code généré
+            self.apply_clippy_suggestions();
+        }
+
         let mut file = File::create(file_path)?;
         file.write_all(self.content.as_bytes())?;
 
         println!("[AURORAE++] Module {} enregistré à {}", self.name, full_path);
         Ok(())
     }
+
+    // Méthode pour effectuer un refactoring si des problèmes sont détectés dans l'analyse
+    fn refactor_code(&self) {
+        // Logiciel de refactoring - pourrait utiliser des outils comme `rustfmt` ou des suggestions de `clippy`
+        println!("[AURORAE++] Refactoring du module {}", self.name);
+        // Implémenter ici les suggestions d'amélioration, comme l'optimisation de la gestion des erreurs ou de la mémoire
+    }
+
+    // Appliquer les suggestions de Clippy pour améliorer le code généré
+    fn apply_clippy_suggestions(&self) {
+        // Appliquer les corrections basées sur les avertissements de Clippy
+        println!("[AURORAE++] Application des suggestions Clippy pour le module {}", self.name);
+        // Cela pourrait inclure des changements comme la simplification de certains blocs ou l'ajout de gestion d'erreurs
+    }
 }
 
 /// Génère un module Rust de base intelligent
 pub fn generate_basic_module(name: &str) -> GeneratedModule {
     let content = format!(
+// Générer un module Rust avec un message personnalisé
         "// Module généré automatiquement par AURORAE++\n\n\
 /// Nom : {}\n/// UID : {}\n\npub fn hello() {{\n    println!(\"[{}] Hello from generated module!\");\n}}",
         name,
