@@ -1,67 +1,36 @@
-use std::fs;
-use std::str::FromStr;
-use std::sync::Arc;
+[package]
+name = "aurorae"
+version = "0.1.0"
+edition = "2021"
+authors = ["TonNom <ton@email.com>"]
+description = "Moteur vivant autonome AURORAE++ pour la création crypto intelligente"
+license = "MIT"
 
-use ethers::prelude::*;
-use ethers::types::{Address, Bytes};
-use ethers::contract::ContractFactory;
-use ethers::middleware::SignerMiddleware;
-use ethers::signers::{LocalWallet, Wallet};
-use k256::ecdsa::SigningKey;
-use ethers::abi::Abi;
+[[bin]]
+name = "aurorae"
+path = "aurorae/main.rs"
 
-use crate::blockchain_core::HttpProvider;
+[dependencies]
+tokio = { version = "1.37", features = ["macros", "rt-multi-thread"] }
+ethers = "2.0.14"
+k256 = "0.13.1"
+uuid = { version = "1.7", features = ["v4"] }
+chrono = "0.4"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
+fs_extra = "1.3"
+reqwest = { version = "0.11", features = ["json", "blocking", "rustls-tls"] }
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+cargo_metadata = "0.18"
+ring = "0.17"
+flate2 = "1.0"
+tar = "0.4"
 
-pub struct Deployer;
-
-impl Deployer {
-    pub async fn deploy_contract(
-        provider: HttpProvider,
-        private_key: &str,
-        abi_path: &str,
-        bytecode_path: &str,
-    ) -> Result<Address, String> {
-        // 📄 Lecture de l'ABI et du bytecode
-        let abi_content = fs::read_to_string(abi_path)
-            .map_err(|e| format!("Erreur lecture ABI: {}", e))?;
-        let bytecode = fs::read_to_string(bytecode_path)
-            .map_err(|e| format!("Erreur lecture bytecode: {}", e))?;
-
-        // ✅ Chargement de l'ABI
-        let parsed_abi: Abi = Abi::load(abi_content.as_bytes())
-            .map_err(|e| format!("ABI invalide: {}", e))?;
-
-        // ✅ Parsing du bytecode → Bytes (type ethers)
-        let parsed_bytecode = bytecode
-            .parse::<ethers::types::Bytes>()
-            .map_err(|e| format!("Bytecode invalide: {}", e))?;
-        
-        // 🔐 Construction du wallet
-        let wallet: LocalWallet = private_key
-            .parse::<Wallet<SigningKey>>()
-            .map_err(|e| format!("Clé privée invalide: {}", e))?
-            .with_chain_id(1u64); // à adapter selon le réseau
-
-        let client = SignerMiddleware::new(provider.clone(), wallet);
-        let client = Arc::new(client);
-
-        // 🏗️ Factory pour déploiement
-        let factory = ContractFactory::new(parsed_abi, parsed_bytecode, client.clone());
-
-        // 🚀 Déploiement du contrat
-        let contract = factory
-            .deploy(())
-            .map_err(|e| format!("Erreur création déploiement: {}", e))?
-            .confirmations(3_usize)  // Corrected: explicitly using usize instead of i32
-            .send()
-            .await
-            .map_err(|e| format!("Erreur déploiement: {}", e))?;
-
-        println!(
-            "[AURORAE++] ✅ Contrat déployé à l'adresse : {:?}",
-            contract.address()
-        );
-
-        Ok(contract.address())
-    }
-}
+# 🔧 Ajouts nécessaires
+regex = "1.10"
+lazy_static = "1.4"
+parking_lot = "0.12"
