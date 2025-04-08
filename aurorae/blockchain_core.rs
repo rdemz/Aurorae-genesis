@@ -1,16 +1,23 @@
-use alloy_primitives::{Address, U256, Bytes};
-use alloy_provider::{Provider, HttpProvider};
-use alloy_signer::{Signer, LocalWallet};
-use alloy_network::{Network, Ethereum};
-use alloy_json_rpc::{RpcClient, ClientBuilder};
-use std::str::FromStr;
 use std::collections::HashMap;
 use uuid::Uuid;
 use chrono::Utc;
+use rand::Rng;
+
+// Structure simplifiée pour une intégration blockchain fonctionnelle
+pub struct HttpProvider {
+    url: String,
+}
+
+impl HttpProvider {
+    pub fn new(url: impl Into<String>) -> Self {
+        Self {
+            url: url.into(),
+        }
+    }
+}
 
 pub struct BlockchainCore {
     providers: HashMap<String, HttpProvider>,
-    wallets: HashMap<String, LocalWallet>,
     networks: Vec<String>,
     active_networks: usize,
     transactions_executed: u64,
@@ -22,18 +29,20 @@ pub struct BlockchainCore {
 
 impl BlockchainCore {
     pub fn new() -> Self {
-        let mainnet_url = std::env::var("ETH_MAINNET_URL").unwrap_or_else(|_| "http://localhost:8545".to_string());
+        let mainnet_url = std::env::var("ETH_RPC_URL").unwrap_or_else(|_| "http://localhost:8545".to_string());
         
         let mut providers = HashMap::new();
         providers.insert("aurorae-genesis".to_string(), HttpProvider::new(mainnet_url));
         
+        let mut contracts_deployed = HashMap::new();
+        contracts_deployed.insert("aurorae-genesis".to_string(), Vec::new());
+        
         Self {
             providers,
-            wallets: HashMap::new(),
             networks: vec!["aurorae-genesis".to_string()],
             active_networks: 1,
             transactions_executed: 0,
-            contracts_deployed: HashMap::new(),
+            contracts_deployed,
             bridges: Vec::new(),
             autonomy_level: 1.0,
             evolution_stage: 1,
@@ -58,13 +67,10 @@ impl BlockchainCore {
     }
     
     pub async fn create_wallet(&mut self, network: &str) -> Result<String, String> {
-        // Dans une implémentation réelle, cela générerait un nouveau portefeuille
-        // Pour la simulation, nous créerons un ID de portefeuille aléatoire
+        // Simuler la création d'un nouveau portefeuille
         let wallet_id = format!("wallet-{}", Uuid::new_v4().simple());
         
         println!("[AURORAE++] 🔑 Nouveau portefeuille créé sur réseau {}: {}", network, wallet_id);
-        // En réalité, nous stockerions un portefeuille correctement généré
-        // self.wallets.push((wallet_id.clone(), generated_wallet));
         
         self.transactions_executed += 1;
         Ok(wallet_id)
@@ -77,8 +83,7 @@ impl BlockchainCore {
         
         println!("[AURORAE++] 📝 Déploiement du contrat {} sur réseau {}", contract_name, network);
         
-        // Dans une implémentation réelle, cela déploierait le contrat via alloy
-        // Pour la simulation, nous retournerons une adresse de contrat fictive
+        // Simuler le déploiement de contrat
         let contract_address = format!("0x{}", Uuid::new_v4().simple());
         
         // Enregistrer le contrat déployé
@@ -99,8 +104,7 @@ impl BlockchainCore {
         
         println!("[AURORAE++] 🌉 Création d'un pont entre {} et {}", network1, network2);
         
-        // Dans une implémentation réelle, cela déploierait des contrats de pont sur les deux réseaux
-        // Pour la simulation, nous retournerons un ID de pont
+        // Simuler la création d'un pont cross-chain
         let bridge_id = format!("bridge-{}-{}-{}", network1, network2, Uuid::new_v4().simple());
         
         // Enregistrer le pont
@@ -123,8 +127,7 @@ impl BlockchainCore {
         let l2_name = format!("l2-{}-{}", base_network, Uuid::new_v4().simple());
         println!("[AURORAE++] 🔶 Création d'une Layer 2 sur {}: {}", base_network, l2_name);
         
-        // Dans une implémentation réelle, cela déploierait des contrats L2 et leur configuration
-        // Pour la simulation, nous l'ajouterons comme un nouveau réseau
+        // Simuler la création d'un réseau L2
         self.networks.push(l2_name.clone());
         self.active_networks += 1;
         
