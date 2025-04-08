@@ -63,8 +63,10 @@ use crate::knowledge::{KnowledgeBase}; // Utiliser KnowledgeBase pour gérer les
 async fn main() {
     println!("[AURORAE++] 🚀 Lancement du système Aurorae-genesis");
 
+    // Définir l'adresse du fondateur
     set_founder_address("0xFd4456F8d982276Ac7d2294E66Dc8aCc097f0043");
 
+    // Initialiser le cerveau du système
     let brain = boot_brain();
     {
         let mut brain_lock = brain.write();
@@ -74,7 +76,7 @@ async fn main() {
     // Charger et enrichir la mémoire vivante avec les patterns GitHub appris
     let mut knowledge_base = KnowledgeBase::load(); // Charger la base de savoir existante
     let patterns = scan_feed_and_learn(&mut knowledge_base); // Apprendre et ajouter à la mémoire
-    println!("[AURORAE++] 📚 Patterns GitHub appris : {}", knowledge_base.get_patterns().len());  // Correction
+    println!("[AURORAE++] 📚 Patterns GitHub appris : {}", knowledge_base.get_patterns().len());
 
     // Exemple de code à analyser
     let code = "let x = 10;";
@@ -123,9 +125,11 @@ async fn main() {
     core.economy.initialize();
     core.intelligence.initialize();
 
+    // Créer une collection NFT évolutive
     let collection_id = core.nft_minter.create_evolutionary_collection();
     println!("[AURORAE++] 🎨 Collection NFT évolutive : {}", collection_id);
 
+    // Créer un token sur la blockchain
     let _token_id = core.forge.mint_token("Auroraium", TokenKind::Fungible, 1_000_000, 0.05).await;
     reward_founder(1337.0);
 
@@ -187,16 +191,15 @@ async fn main() {
         core.evolve().await;
 
         dreamer.dream_cycle();
-        // Correction pour les appels aux fonctions non définies
-        vision.autorevise(); // Assurez-vous que ces fonctions existent
-        vision.roadmap();    // Assurez-vous que ces fonctions existent
+        vision.autorevise();
+        vision.roadmap();
         guardian.status_report();
-        security.analyze_threats().await; // Assurez-vous que cette fonction existe
+        security.analyze_threats().await;
 
-        strategist.consult_openai(&brain, &mut vision).await; // Assurez-vous que cette fonction existe
+        strategist.consult_openai(&brain, &mut vision).await;
 
-        if reproduction.get_active_instances().len() < 5 { // Correction du chemin d'appel
-            let next = reproduction.spawn_instance("AutoReproduction", vec!["economy", "intelligence"]); // Correction du chemin d'appel
+        if reproduction.get_active_instances().len() < 5 {
+            let next = reproduction.spawn_instance("AutoReproduction", vec!["economy", "intelligence"]);
             println!("[AURORAE++] 🤖 Clone auto-répliqué : {}", next.id);
         }
 
