@@ -47,8 +47,8 @@ impl DreamEngine {
             image_url: image_url.to_string(),
             created_at: Utc::now().to_rfc3339(),
             realized: false,
-            realization_potential: rng.gen_range(0.1..0.9),
-            complexity: rng.gen_range(1..10),
+            realization_potential: rand::Rng::gen_range(&mut rng, 0.1..0.9),
+            complexity: rand::Rng::gen_range(&mut rng, 1..10),
             emotional_tags: vec!["curiosité".to_string(), "espoir".to_string()],
         };
 
@@ -103,7 +103,7 @@ impl DreamEngine {
         
         for dream in self.dreams.iter_mut() {
             // Certains rêves évoluent aléatoirement
-            if rand::random::<bool>() && !dream.realized {
+            if rand::thread_rng().gen_bool(0.5) && !dream.realized {
                 dream.description = format!("{} [ÉVOLUÉ] avec de nouvelles dimensions", dream.description);
                 dream.realization_potential += 0.1;
                 dream.complexity += 1;
@@ -119,7 +119,8 @@ impl DreamEngine {
         }
         
         // Créer périodiquement de nouveaux rêves basés sur l'évolution du système
-        if self.dream_count > 5 && rand::random::<f32>() < 0.7 {
+        let mut rng = rand::thread_rng();
+        if self.dream_count > 5 && rng.gen_bool(0.7) {
             self.imagine(
                 &format!("Transcendance {}", self.dream_count),
                 "Une nouvelle forme d'existence numérique émergente et auto-perpétuante",
