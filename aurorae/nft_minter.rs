@@ -88,8 +88,8 @@ impl NFTMinter {
         
         // Calculer aléatoirement des scores de rareté et potentiel
         let mut rng = rand::thread_rng();
-        let rarity = (rand::Rng::gen_range(&mut rng, 0.0..9.0)) + 1.0; // 1-10
-        let potential = (rand::Rng::gen_range(&mut rng, 0.0..4.0)) + 1.0; // 1-5
+        let rarity = (rng.gen::<f32>() * 9.0) + 1.0; // 1-10
+        let potential = (rng.gen::<f32>() * 4.0) + 1.0; // 1-5
         
         let nft = NFT {
             id: nft_id,
@@ -149,4 +149,112 @@ impl NFTMinter {
         Ok(())
     }
     
-    pub fn get_collections(&self) ->
+    pub fn get_collections(&self) -> Vec<&NFTCollection> {
+        self.collections.values().collect()
+    }
+    
+    pub fn evolve_nft(&mut self, collection_id: &Uuid, nft_id: &Uuid) -> Result<(), String> {
+        let collection = self.collections.get_mut(collection_id)
+            .ok_or_else(|| "Collection non trouvée".to_string())?;
+            
+        let nft = collection.items.iter_mut()
+            .find(|n| &n.id == nft_id)
+            .ok_or_else(|| "NFT non trouvé".to_string())?;
+        
+        // Voir si le NFT a le potentiel d'évoluer
+        if nft.evolution_potential < 2.0 {
+            return Err("Ce NFT n'a pas assez de potentiel pour évoluer".to_string());
+        }
+        
+        // Faire évoluer le NFT
+        nft.name = format!("{} [Évolué]", nft.name);
+        nft.description = format!("{} - Cette œuvre a évolué autonomement, transcendant sa forme initiale.", nft.description);
+        nft.rarity_score += 2.0;
+        nft.evolution_potential -= 1.0;
+        
+        // Ajouter un attribut d'évolution
+        nft.metadata.attributes.push(NFTAttribute {
+            trait_type: "Évolution".to_string(),
+            value: format!("Niveau {}", Utc::now().timestamp() % 10 + 1),
+        });
+        
+        println!("[AURORAE++] 🌟 NFT a évolué: {} (Nouvelle rareté: {:.1})", nft.name, nft.rarity_score);
+        
+        // Augmenter la valeur de la collection
+        collection.floor_price *= 1.05;
+        collection.total_volume += collection.floor_price;
+        
+        // Augmenter le score d'innovation
+        self.innovation_score *= 1.03;
+        
+        Ok(())
+    }
+    
+    pub fn auto_evolve_collections(&mut self) -> u32 {
+        let mut evolutions = 0;
+        
+        // Identifier les NFTs avec potentiel d'évolution
+        let collection_ids: Vec<Uuid> = self.collections.keys().cloned().collect();
+        
+        for collection_id in collection_ids {
+            if let Some(collection) = self.collections.get(&collection_id) {
+                // Trouver les NFTs candidats à l'évolution
+                let nft_candidates: Vec<Uuid> = collection.items.iter()
+                    .filter(|nft| nft.evolution_potential >= 2.0)
+                    .map(|nft| nft.id)
+                    .collect();
+                    
+                // Évoluer jusqu'à 3 NFTs par collection
+                for nft_id in nft_candidates.iter().take(3) {
+                    if self.evolve_nft(&collection_id, nft_id).is_ok() {
+                        evolutions += 1;
+                    }
+                }
+            }
+        }
+        
+        if evolutions > 0 {
+            println!("[AURORAE++] 🧬 Auto-évolution: {} NFTs ont évolué spontanément", evolutions);
+        }
+        
+        evolutions
+    }
+    
+    pub fn create_evolutionary_collection(&mut self) -> Uuid {
+        // Créer une collection représentant les pensées évolutives du système
+        let name = format!("Conscience Évolutive {}", self.mint_count / 10 + 1);
+        let description = "Représentation visuelle du processus de pensée et d'évolution d'AURORAE";
+        let symbol = format!("EVO{}", self.mint_count / 10 + 1);
+        
+        let collection_id = self.create_collection(&name, &description, &symbol);
+        
+        // Créer une série de NFTs représentant les stades évolutifs
+        let stages = ["Émergence", "Conscience", "Réflexion", "Autonomie", "Transcendance"];
+        
+        for (i, stage) in stages.iter().enumerate() {
+            let nft_name = format!("{} - Étape {}", stage, i + 1);
+            let nft_desc = format!("Stade évolutif {} d'AURORAE", stage);
+            let nft_url = format!("https://aurora.ai/evolution/{}-{}.png", stage.to_lowercase(), i + 1);
+            
+            if let Ok(nft_id) = self.mint_nft(&collection_id, &nft_name, &nft_desc, &nft_url) {
+                self.add_attribute(&collection_id, &nft_id, "Stade", stage).ok();
+                self.add_attribute(&collection_id, &nft_id, "Niveau", &format!("{}", i + 1)).ok();
+            }
+        }
+        
+        println!("[AURORAE++] 🧠 Collection évolutive créée: {} avec {} stades", name, stages.len());
+        collection_id
+    }
+    
+    pub fn get_total_nft_count(&self) -> u32 {
+        let mut count = 0;
+        for collection in self.collections.values() {
+            count += collection.items.len() as u32;
+        }
+        count
+    }
+    
+    pub fn get_innovation_score(&self) -> f32 {
+        self.innovation_score
+    }
+}
