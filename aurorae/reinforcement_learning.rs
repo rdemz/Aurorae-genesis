@@ -67,7 +67,7 @@ impl LearningAgent {
         
         // Calcul de la nouvelle Q-value
         let max_future_q = self.actions.iter()
-            .filter_map(|a| self.q_table.get(*a)) // Récupérer les Q-values pour chaque action
+            .filter_map(|a| self.q_table.get(a)) // Récupérer les Q-values pour chaque action
             .filter_map(|action_map| action_map.get(next_state)) // Récupérer la Q-value pour le prochain état
             .cloned() // Cloner les valeurs
             .fold(0.0, f32::max); // Trouver la valeur maximale
