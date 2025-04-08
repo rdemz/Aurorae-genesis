@@ -1,4 +1,4 @@
-//! deployer.rs — Déploiement de contrat intelligent ERC20 / NFT avec ethers-rs
+//! deployer.rs — Déploiement de contrats EVM avec ethers-rs 2.0.14
 
 use std::fs;
 use std::str::FromStr;
@@ -22,34 +22,34 @@ impl Deployer {
         abi_path: &str,
         bytecode_path: &str,
     ) -> Result<Address, String> {
-        // 📄 Lecture des fichiers ABI + bytecode
+        // 📄 Lecture de l’ABI et du bytecode
         let abi_content = fs::read_to_string(abi_path)
             .map_err(|e| format!("Erreur lecture ABI: {}", e))?;
         let bytecode = fs::read_to_string(bytecode_path)
             .map_err(|e| format!("Erreur lecture bytecode: {}", e))?;
 
-        // 🔁 Conversion en types ethers-rs
+        // ✅ Chargement de l’ABI
         let parsed_abi: Abi = Abi::load(abi_content.as_bytes())
             .map_err(|e| format!("ABI invalide: {}", e))?;
 
-        let parsed_bytecode: Bytes = bytecode
+        // ✅ Parsing du bytecode → Bytes (type ethers)
+        let parsed_bytecode = bytecode
             .parse::<Bytes>()
             .map_err(|e| format!("Bytecode invalide: {}", e))?;
 
-        // 🔐 Création du wallet
+        // 🔐 Construction du wallet
         let wallet: LocalWallet = private_key
             .parse()
-            .map_err(|e| format!("Clé invalide: {}", e))?
-            .with_chain_id(1u64); // mainnet, à adapter si besoin
+            .map_err(|e| format!("Clé privée invalide: {}", e))?
+            .with_chain_id(1u64); // à adapter selon le réseau
 
-        // 🌐 Middleware + client signé
         let client = SignerMiddleware::new(provider.clone(), wallet);
         let client = Arc::new(client);
 
-        // 🏗️ Factory de déploiement
+        // 🏗️ Factory pour déploiement
         let factory = ContractFactory::new(parsed_abi, parsed_bytecode, client.clone());
 
-        // 🚀 Déploiement
+        // 🚀 Déploiement du contrat
         let contract = factory
             .deploy(())
             .map_err(|e| format!("Erreur création déploiement: {}", e))?
