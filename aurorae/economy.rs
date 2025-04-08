@@ -3,7 +3,6 @@ use chrono::Utc;
 use uuid::Uuid;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use log::{info, warn};
 
 use crate::founder_income::reward_founder;
 
@@ -159,7 +158,8 @@ impl EconomyEngine {
         let mut total_revenue = 0.0;
         
         // Générer des revenus basés sur les flux configurés
-        for (source, rate) in &self.revenue_streams {
+        let streams: Vec<_> = self.revenue_streams.clone().into_iter().collect();
+        for (source, rate) in streams {
             let base_amount = 10.0 + (self.get_total_value() * rate);
             let revenue_amount = base_amount * self.innovation_bonus;
             
@@ -170,7 +170,7 @@ impl EconomyEngine {
                 TransactionType::Income,
                 revenue_amount,
                 &format!("Revenu de {}", source),
-                source,
+                &source,
                 "treasury"
             );
         }
@@ -179,13 +179,15 @@ impl EconomyEngine {
         self.add_funds(total_revenue);
         
         // Dépenses automatiques
-        for (expense_name, rate) in &self.expenses {
+        let expenses_clone = self.expenses.clone();
+        for (expense_name, rate) in expenses_clone {
             let expense_amount = self.get_total_value() * rate;
-            self.spend_funds(expense_amount, expense_name).ok();
+            self.spend_funds(expense_amount, &expense_name).ok();
         }
         
         // Investissements automatiques
-        for (investment_name, rate) in &self.investments {
+        let investments_clone = self.investments.clone();
+        for (investment_name, rate) in investments_clone {
             let investment_amount = self.get_total_value() * rate;
             
             // Enregistrer l'investissement
@@ -194,7 +196,7 @@ impl EconomyEngine {
                 investment_amount,
                 &format!("Investissement dans {}", investment_name),
                 "treasury",
-                investment_name
+                &investment_name
             );
         }
         
@@ -206,7 +208,8 @@ impl EconomyEngine {
         // Simuler l'innovation économique en créant de nouveaux flux de revenus
         let innovation_id = format!("innovation_{}", Uuid::new_v4().simple().to_string().chars().take(8).collect::<String>());
         
-        let rate = 0.01 + (rand::random::<f64>() * 0.03); // Entre 1-4%
+        let mut rng = rand::thread_rng();
+        let rate = 0.01 + (rand::Rng::gen_range(&mut rng, 0.0..0.03)); // Entre 1-4%
         self.revenue_streams.insert(innovation_id.clone(), rate);
         
         self.innovation_bonus *= 1.05; // Bonus d'innovation croissant
