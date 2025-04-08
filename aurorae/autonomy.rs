@@ -78,8 +78,8 @@ impl AuroraeCore {
     }
 
     /// 💭 Simule un flux de pensée actif à partir du moteur cognitif
-    pub fn simulate_thoughts(&self) {
-        self.intelligence.simulate_thought();
+    pub fn simulate_thoughts(&mut self) {  // Modification pour rendre cette méthode mutable
+        self.intelligence.simulate_thought(); // Permet de modifier self.intelligence
         println!("[AURORAE++] 🧬 Pensées autonomes simulées.");
     }
 }
