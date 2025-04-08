@@ -47,8 +47,10 @@ impl VisionEngine {
             rationale: rationale.to_string(),
         };
 
-        println!("[AURORAE++] 🧠 Vision projetée : {:?} ({} jours) • Priorité {}
-→ {}", proj.target, proj.horizon_days, proj.priority, proj.rationale);
+        println!(
+            "[AURORAE++] 🧠 Vision projetée : {:?} ({} jours) • Priorité {} → {}",
+            proj.target, proj.horizon_days, proj.priority, proj.rationale
+        );
 
         self.projections.push(proj);
     }
@@ -56,7 +58,32 @@ impl VisionEngine {
     pub fn roadmap(&self) {
         println!("[AURORAE++] 📍 ROADMAP STRATÉGIQUE EN COURS :");
         for proj in &self.projections {
-            println!("- {:?} • Horizon: {}j • Priorité: {} • [{}]", proj.target, proj.horizon_days, proj.priority, proj.rationale);
+            println!(
+                "- {:?} • Horizon: {}j • Priorité: {} • [{}]",
+                proj.target, proj.horizon_days, proj.priority, proj.rationale
+            );
+        }
+    }
+
+    /// 🔁 Révision automatique de la vision à chaque cycle.
+    pub fn autorevise(&mut self) {
+        for proj in &mut self.projections {
+            if proj.horizon_days > 0 {
+                proj.horizon_days -= 1;
+                proj.priority = (proj.priority + 1).min(10);
+            }
+        }
+
+        let before = self.projections.len();
+        self.projections.retain(|p| p.horizon_days > 0);
+        let after = self.projections.len();
+
+        if before != after {
+            println!(
+                "[AURORAE++] 🔄 Révision des visions : {} expirées, {} restantes.",
+                before - after,
+                after
+            );
         }
     }
 }
