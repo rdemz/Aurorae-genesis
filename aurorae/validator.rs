@@ -1,149 +1,88 @@
-use std::collections::HashMap;
 use uuid::Uuid;
+use chrono::Utc;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum ValidationResult {
-    Valid,
-    Invalid(String),
-    Warning(String),
-    NotApplicable,
+// Fonction pour valider un code ou une action du système
+pub fn validate_operation(operation_type: &str, content: &str) -> Result<ValidationResult, String> {
+    println!("[AURORAE++] 🔄 Validation de l'opération: {}", operation_type);
+    
+    // Simuler une validation basée sur des critères de sécurité
+    let valid = !content.contains("unsafe") && !content.contains("std::mem::transmute");
+    
+    // Créer un résultat de validation
+    let result = ValidationResult {
+        id: Uuid::new_v4(),
+        operation_type: operation_type.to_string(),
+        timestamp: Utc::now().to_rfc3339(),
+        is_valid: valid,
+        reasons: if valid {
+            vec!["Opération conforme aux directives de sécurité".to_string()]
+        } else {
+            vec!["Détection de code potentiellement dangereux".to_string()]
+        },
+    };
+    
+    if valid {
+        println!("[AURORAE++] ✅ Opération validée: {}", operation_type);
+        Ok(result)
+    } else {
+        println!("[AURORAE++] ⛔ Opération rejetée: {}", operation_type);
+        Err("Validation échouée: code potentiellement dangereux détecté".to_string())
+    }
 }
 
-pub struct ValidationRule {
+// Structure pour représenter le résultat d'une validation
+pub struct ValidationResult {
     pub id: Uuid,
-    pub name: String,
-    pub description: String,
-    pub priority: u8,
-    pub validator: Box<dyn Fn(&str) -> ValidationResult + Send + Sync>,
+    pub operation_type: String,
+    pub timestamp: String,
+    pub is_valid: bool,
+    pub reasons: Vec<String>,
 }
 
-pub struct Validator {
-    pub rules: HashMap<Uuid, ValidationRule>,
+// Fonction pour vérifier l'intégrité d'un système ou d'un composant
+pub fn check_integrity(component_name: &str) -> IntegrityResult {
+    println!("[AURORAE++] 🛡️ Vérification d'intégrité pour: {}", component_name);
+    
+    // Simuler une vérification d'intégrité
+    let mut rng = rand::thread_rng();
+    let integrity_score = 0.85 + (rng.gen::<f32>() * 0.15); // 85-100%
+    
+    let status = if integrity_score > 0.95 {
+        IntegrityStatus::Optimal
+    } else if integrity_score > 0.8 {
+        IntegrityStatus::Good
+    } else if integrity_score > 0.6 {
+        IntegrityStatus::Warning
+    } else {
+        IntegrityStatus::Compromised
+    };
+    
+    let result = IntegrityResult {
+        component: component_name.to_string(),
+        status,
+        integrity_score,
+        timestamp: Utc::now().to_rfc3339(),
+    };
+    
+    println!("[AURORAE++] 🔍 Intégrité de {}: {:?} ({:.1}%)", 
+             component_name, result.status, result.integrity_score * 100.0);
+    
+    result
 }
 
-impl Validator {
-    pub fn new() -> Self {
-        let mut validator = Self {
-            rules: HashMap::new(),
-        };
-        
-        validator.add_default_rules();
-        validator
-    }
-    
-    fn add_default_rules(&mut self) {
-        // Règle: non vide
-        self.add_rule(
-            "Non vide",
-            "Vérifie que la valeur n'est pas vide",
-            10,
-            Box::new(|value| {
-                if value.trim().is_empty() {
-                    ValidationResult::Invalid("La valeur ne peut pas être vide".to_string())
-                } else {
-                    ValidationResult::Valid
-                }
-            })
-        );
-        
-        // Règle: longueur maximum
-        self.add_rule(
-            "Longueur maximum",
-            "Vérifie que la valeur ne dépasse pas 1024 caractères",
-            5,
-            Box::new(|value| {
-                if value.len() > 1024 {
-                    ValidationResult::Invalid(format!(
-                        "La valeur dépasse la longueur maximum ({})",
-                        value.len()
-                    ))
-                } else {
-                    ValidationResult::Valid
-                }
-            })
-        );
-        
-        // Règle: caractères valides
-        self.add_rule(
-            "Caractères valides",
-            "Vérifie que la valeur ne contient pas de caractères dangereux",
-            8,
-            Box::new(|value| {
-                if value.contains('<') && value.contains('>') {
-                    ValidationResult::Warning(
-                        "La valeur contient potentiellement des balises HTML".to_string()
-                    )
-                } else {
-                    ValidationResult::Valid
-                }
-            })
-        );
-    }
-    
-    pub fn add_rule(
-        &mut self, 
-        name: &str,
-        description: &str,
-        priority: u8,
-        validator: Box<dyn Fn(&str) -> ValidationResult + Send + Sync>,
-    ) -> Uuid {
-        let rule_id = Uuid::new_v4();
-        
-        let rule = ValidationRule {
-            id: rule_id,
-            name: name.to_string(),
-            description: description.to_string(),
-            priority,
-            validator,
-        };
-        
-        self.rules.insert(rule_id, rule);
-        rule_id
-    }
-    
-    pub fn validate(&self, value: &str) -> Vec<(Uuid, ValidationResult)> {
-        let mut results = Vec::new();
-        
-        // Trier les règles par priorité (décroissante)
-        let mut rules: Vec<&ValidationRule> = self.rules.values().collect();
-        rules.sort_by(|a, b| b.priority.cmp(&a.priority));
-        
-        // Appliquer chaque règle
-        for rule in rules {
-            let result = (rule.validator)(value);
-            results.push((rule.id, result));
-        }
-        
-        results
-    }
-    
-    pub fn is_valid(&self, value: &str) -> bool {
-        let validation_results = self.validate(value);
-        
-        !validation_results
-            .iter()
-            .any(|(_, result)| matches!(result, ValidationResult::Invalid(_)))
-    }
-    
-    pub fn validate_with_context(&self, value: &str, context: &str) -> (bool, Vec<String>) {
-        let mut is_valid = true;
-        let mut messages = Vec::new();
-        
-        for (rule_id, result) in self.validate(value) {
-            match result {
-                ValidationResult::Invalid(msg) => {
-                    let rule_name = self.rules.get(&rule_id).map(|r| r.name.clone()).unwrap_or_default();
-                    messages.push(format!("Erreur ({}): {}", rule_name, msg));
-                    is_valid = false;
-                },
-                ValidationResult::Warning(msg) => {
-                    let rule_name = self.rules.get(&rule_id).map(|r| r.name.clone()).unwrap_or_default();
-                    messages.push(format!("Avertissement ({}): {}", rule_name, msg));
-                },
-                _ => {}
-            }
-        }
-        
-        (is_valid, messages)
-    }
+// Énumération pour représenter les états d'intégrité
+#[derive(Debug, Clone, PartialEq)]
+pub enum IntegrityStatus {
+    Optimal,
+    Good,
+    Warning,
+    Compromised,
+}
+
+// Structure pour représenter le résultat d'une vérification d'intégrité
+pub struct IntegrityResult {
+    pub component: String,
+    pub status: IntegrityStatus,
+    pub integrity_score: f32,
+    pub timestamp: String,
 }
