@@ -1,8 +1,3 @@
-//! AURORAE++ - learning.rs
-//!
-//! Ce module lit les dépôts clonés localement, analyse les fichiers `.rs`, et extrait des patterns de code
-//! pour enrichir la mémoire vivante (knowledge.rs) et guider le générateur.
-
 use std::fs::{read_to_string, read_dir};
 use std::path::{Path, PathBuf};
 use regex::Regex;
@@ -21,7 +16,6 @@ pub struct PatternInsight {
 }
 
 impl PatternInsight {
-    // Convertir les insights en objets Pattern pour les stocker dans la mémoire
     pub fn to_pattern(self) -> Pattern {
         Pattern {
             module_name: self.module_name,
@@ -42,9 +36,7 @@ pub fn scan_feed_and_learn(knowledge_base: &mut KnowledgeBase) {
                 let module_name = path.file_name().unwrap().to_string_lossy().to_string();
                 let stats = analyze_rust_files(&path);
                 let pattern = stats.to_pattern();
-                
-                // Ajouter les patterns extraits à la mémoire vivante
-                knowledge_base.add_pattern_from_learning(pattern);  // Utilisation corrigée
+                knowledge_base.add_pattern(pattern);  // Utilisation correcte de `add_pattern`
             }
         }
     }
@@ -84,7 +76,7 @@ fn analyze_rust_files(dir: &Path) -> PatternInsight {
     }
 }
 
-/// Récupère tous les fichiers .rs d'un projet donné
+/// Récupère tous les fichiers .rs d’un projet donné
 fn find_rust_files(base: &Path) -> Vec<PathBuf> {
     let mut results = vec![];
     if let Ok(entries) = read_dir(base) {
