@@ -63,7 +63,7 @@ impl VisionEngine {
         );
 
         self.projections.push(proj);
-        self.save();
+        self.save();  // Sauvegarder l'état après ajout
     }
 
     pub fn roadmap(&self) {
@@ -81,12 +81,12 @@ impl VisionEngine {
         for proj in &mut self.projections {
             if proj.horizon_days > 0 {
                 proj.horizon_days -= 1;
-                proj.priority = (proj.priority + 1).min(10);
+                proj.priority = (proj.priority + 1).min(10); // Assure que la priorité ne dépasse pas 10
             }
         }
 
         let before = self.projections.len();
-        self.projections.retain(|p| p.horizon_days > 0);
+        self.projections.retain(|p| p.horizon_days > 0);  // Supprimer les projections expirées
         let after = self.projections.len();
 
         if before != after {
@@ -97,7 +97,7 @@ impl VisionEngine {
             );
         }
 
-        self.save();
+        self.save();  // Sauvegarde après révision
     }
 
     /// 💾 Sauvegarde automatique en JSON local
@@ -118,9 +118,9 @@ impl VisionEngine {
         let path = Path::new("aurorae_state/vision.json");
         if let Ok(file) = File::open(path) {
             let reader = BufReader::new(file);
-            serde_json::from_reader(reader).ok()
+            serde_json::from_reader(reader).ok()  // Retourne l'option de la structure déserialisée
         } else {
-            None
+            None  // Si le fichier n'existe pas, retourne None
         }
     }
 }
