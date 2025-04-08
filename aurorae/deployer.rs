@@ -52,7 +52,7 @@ impl Deployer {
         let contract = factory
             .deploy(())
             .map_err(|e| format!("Erreur création déploiement: {}", e))?
-            .confirmations(3)
+            .confirmations(3_usize)  // Corrected: explicitly using usize instead of i32
             .send()
             .await
             .map_err(|e| format!("Erreur déploiement: {}", e))?;
