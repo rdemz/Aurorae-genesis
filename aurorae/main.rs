@@ -186,15 +186,16 @@ async fn main() {
         core.evolve().await;
 
         dreamer.dream_cycle();
-        vision::autorevise(); // Correction du chemin d'appel
-        vision::roadmap();    // Correction du chemin d'appel
+        // Correction pour les appels aux fonctions non définies
+        vision.autorevise(); // Assurez-vous que ces fonctions existent
+        vision.roadmap();    // Assurez-vous que ces fonctions existent
         guardian.status_report();
-        security::analyze_threats().await; // Correction du chemin d'appel
+        security.analyze_threats().await; // Assurez-vous que cette fonction existe
 
-        strategist::consult_openai(&brain, &mut vision).await; // Correction du chemin d'appel
+        strategist.consult_openai(&brain, &mut vision).await; // Assurez-vous que cette fonction existe
 
-        if reproduction::get_active_instances().len() < 5 { // Correction du chemin d'appel
-            let next = reproduction::spawn_instance("AutoReproduction", vec!["economy", "intelligence"]); // Correction du chemin d'appel
+        if reproduction.get_active_instances().len() < 5 { // Correction du chemin d'appel
+            let next = reproduction.spawn_instance("AutoReproduction", vec!["economy", "intelligence"]); // Correction du chemin d'appel
             println!("[AURORAE++] 🤖 Clone auto-répliqué : {}", next.id);
         }
 
