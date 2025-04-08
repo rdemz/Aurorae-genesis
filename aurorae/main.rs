@@ -27,6 +27,7 @@ mod refactor;           // Importer le module de refactoring
 mod pattern_extractor; // Importer le module d'extraction de patterns
 mod clippy_integration; // Importer l'intégration de Clippy
 mod update_checker;    // Importer la vérification de mise à jour
+mod reinforcement_learning;  // Moteur d'apprentissage par renforcement
 
 use crate::autonomy::AuroraeCore;
 use crate::founder_income::{set_founder_address, reward_founder};
@@ -46,6 +47,7 @@ use crate::security::SecuritySystem;
 use crate::explorer::search_best_rust_chains;
 use crate::alchemy::TokenKind;
 use crate::strategist::Strategist;
+use crate::reinforcement_learning::{LearningAgent}; // Intégration de l'agent RL
 
 use crate::knowledge::{KnowledgeBase}; // Utiliser KnowledgeBase pour gérer les patterns
 
@@ -158,6 +160,9 @@ async fn main() {
 
     sleep(Duration::from_secs(5)).await;
 
+    // Initialiser l'agent d'apprentissage par renforcement
+    let mut learning_agent = LearningAgent::new(vec!["generate_code", "refactor_code", "deploy_contract"]);
+
     loop {
         {
             let mut brain_lock = brain.write();
@@ -180,6 +185,21 @@ async fn main() {
             let next = reproduction.spawn_instance("AutoReproduction", vec!["economy", "intelligence"]);
             println!("[AURORAE++] 🤖 Clone auto-répliqué : {}", next.id);
         }
+
+        // Apprentissage par renforcement : Mettre à jour l'agent avec la récompense de chaque action
+        let action = learning_agent.choose_action();
+        let reward = match action.as_str() {
+            "generate_code" => 1.0,
+            "refactor_code" => 0.5,
+            "deploy_contract" => 0.8,
+            _ => 0.0,
+        };
+
+        // Mise à jour de la Q-table
+        learning_agent.learn(reward, "next_state");
+
+        // Affichage de la Q-table pour observer l'évolution
+        learning_agent.print_q_table();
 
         sleep(Duration::from_secs(30)).await;
     }
