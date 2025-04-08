@@ -7,6 +7,7 @@ use std::fs::{read_to_string, read_dir};
 use std::path::{Path, PathBuf};
 use regex::Regex;
 use std::collections::HashMap;
+use crate::knowledge::{Memory, Pattern}; // Utilisation de `knowledge.rs` pour stocker les patterns
 
 const FEED_PATH: &str = "C:\\Users\\admin\\.github_feed";
 
@@ -19,22 +20,34 @@ pub struct PatternInsight {
     pub enums: usize,
 }
 
-/// Lit tous les projets clonés et analyse leurs fichiers Rust
-pub fn scan_feed_and_learn() -> Vec<PatternInsight> {
-    let mut insights = vec![];
+impl PatternInsight {
+    // Convertir les insights en objets Pattern pour les stocker dans la mémoire
+    pub fn to_pattern(self) -> Pattern {
+        Pattern {
+            module_name: self.module_name,
+            functions: self.functions,
+            structs: self.structs,
+            traits: self.traits,
+            enums: self.enums,
+        }
+    }
+}
 
+/// Lit tous les projets clonés et analyse leurs fichiers Rust
+pub fn scan_feed_and_learn(memory: &mut Memory) {
     if let Ok(entries) = read_dir(FEED_PATH) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
                 let module_name = path.file_name().unwrap().to_string_lossy().to_string();
                 let stats = analyze_rust_files(&path);
-                insights.push(PatternInsight { module_name, ..stats });
+                let pattern = stats.to_pattern();
+                
+                // Ajouter les patterns extraits à la mémoire vivante
+                memory.add_pattern(pattern);
             }
         }
     }
-
-    insights
 }
 
 /// Analyse tous les fichiers .rs dans un répertoire
