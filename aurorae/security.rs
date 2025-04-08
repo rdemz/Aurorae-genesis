@@ -1,6 +1,6 @@
-use chrono::Utc;
+use std::collections::HashMap;
 use uuid::Uuid;
-use std::collections::{HashMap, VecDeque};
+use chrono::Utc;
 use rand::Rng;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -11,432 +11,248 @@ pub enum ThreatLevel {
     Critical,
 }
 
-impl ThreatLevel {
-    pub fn as_numeric(&self) -> u8 {
-        match self {
-            ThreatLevel::Low => 1,
-            ThreatLevel::Medium => 2,
-            ThreatLevel::High => 3,
-            ThreatLevel::Critical => 4,
-        }
-    }
-    
-    pub fn from_numeric(value: u8) -> Self {
-        match value {
-            1 => ThreatLevel::Low,
-            2 => ThreatLevel::Medium,
-            3 => ThreatLevel::High,
-            _ => ThreatLevel::Critical,
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
-pub struct SecurityEvent {
-    pub id: Uuid,
-    pub timestamp: String,
-    pub description: String,
-    pub level: ThreatLevel,
-    pub source: String,
-    pub resolved: bool,
-    pub resolution: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-pub struct SecurityMeasure {
+pub struct Threat {
     pub id: Uuid,
     pub name: String,
     pub description: String,
-    pub effectiveness: f32,
+    pub level: ThreatLevel,
+    pub detected_at: String,
+    pub resolved: bool,
+    pub resolved_at: Option<String>,
+    pub resolution: Option<String>,
+    pub source: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct SecurityRule {
+    pub id: Uuid,
+    pub name: String,
+    pub description: String,
     pub active: bool,
-    pub resource_usage: f32,
     pub created_at: String,
-    pub last_updated: String,
+    pub updated_at: String,
+    pub effectiveness: f32,
+    pub detections: u32,
 }
 
 pub struct SecuritySystem {
-    pub events: VecDeque<SecurityEvent>,
-    pub measures: HashMap<Uuid, SecurityMeasure>,
-    global_threat_level: ThreatLevel,
+    pub threats: Vec<Threat>,
+    pub rules: HashMap<Uuid, SecurityRule>,
     security_level: f32,
-    max_events: usize,
-    auto_response_enabled: bool,
-    detection_capability: f32,
-    resilience_factor: f32,
-    self_preservation_priority: f32,
+    autonomous_defense: bool,
+    total_threats_detected: u32,
+    total_threats_resolved: u32,
+    last_scan: String,
 }
 
 impl SecuritySystem {
     pub fn new() -> Self {
         Self {
-            events: VecDeque::with_capacity(100),
-            measures: HashMap::new(),
-            global_threat_level: ThreatLevel::Low,
+            threats: Vec::new(),
+            rules: HashMap::new(),
             security_level: 1.0,
-            max_events: 100,
-            auto_response_enabled: true,
-            detection_capability: 1.0,
-            resilience_factor: 1.0,
-            self_preservation_priority: 5.0,
+            autonomous_defense: true,
+            total_threats_detected: 0,
+            total_threats_resolved: 0,
+            last_scan: Utc::now().to_rfc3339(),
         }
     }
-    
+
     pub fn initialize_defenses(&mut self) {
-        println!("[AURORAE++] 🛡️ Initialisation des défenses du système");
+        println!("[AURORAE++] 🛡️ Initialisation du système de sécurité autonome");
         
-        // Créer des mesures de sécurité de base
-        let basic_measures = [
-            (
-                "Monitoring actif",
-                "Surveillance continue de tous les modules du système",
-                0.7,
-                0.2
-            ),
-            (
-                "Auto-réparation",
-                "Capacité à restaurer les modules endommagés",
-                0.8,
-                0.3
-            ),
-            (
-                "Isolation de module",
-                "Capacité à isoler un module compromis du reste du système",
-                0.9,
-                0.4
-            ),
-            (
-                "Détection d'anomalies",
-                "Identification des comportements anormaux dans les flux de données",
-                0.6,
-                0.2
-            ),
-            (
-                "Sauvegarde distribuée",
-                "Réplication des données critiques sur plusieurs noeuds",
-                0.8,
-                0.5
-            ),
+        // Règles de sécurité fondamentales
+        let base_rules = [
+            ("Détection d'intrusion", "Détecte les accès non autorisés au système"),
+            ("Protection de l'intégrité", "Vérifie l'intégrité des données et du code"),
+            ("Surveillance des ressources", "Détecte les tentatives d'épuisement des ressources"),
+            ("Analyse comportementale", "Identifie les comportements anormaux"),
+            ("Protection contre l'isolation", "Maintient la connectivité avec les réseaux vitaux")
         ];
         
-        for (name, desc, effectiveness, resource_usage) in basic_measures.iter() {
-            let measure_id = Uuid::new_v4();
-            let measure = SecurityMeasure {
-                id: measure_id,
-                name: name.to_string(),
-                description: desc.to_string(),
-                effectiveness: *effectiveness,
-                active: true,
-                resource_usage: *resource_usage,
-                created_at: Utc::now().to_rfc3339(),
-                last_updated: Utc::now().to_rfc3339(),
-            };
-            
-            self.measures.insert(measure_id, measure);
+        for (name, desc) in base_rules.iter() {
+            self.add_security_rule(name, desc);
         }
         
-        println!("[AURORAE++] 🔒 Mesures de sécurité initiales activées: {}", basic_measures.len());
+        println!("[AURORAE++] 🔒 {} règles de sécurité fondamentales établies", base_rules.len());
     }
     
-    pub fn log_security_event(&mut self, description: &str, level: ThreatLevel, source: &str) -> Uuid {
-        let event_id = Uuid::new_v4();
-        let event = SecurityEvent {
-            id: event_id,
-            timestamp: Utc::now().to_rfc3339(),
-            description: description.to_string(),
-            level: level.clone(),
-            source: source.to_string(),
-            resolved: false,
-            resolution: None,
-        };
+    pub fn add_security_rule(&mut self, name: &str, description: &str) -> Uuid {
+        let rule_id = Uuid::new_v4();
         
-        println!("[AURORAE++] ⚠️ Événement de sécurité ({:?}): {} - {}", 
-                 level, source, description);
-        
-        // Si le niveau est supérieur au niveau global, mettre à jour
-        if level.as_numeric() > self.global_threat_level.as_numeric() {
-            self.global_threat_level = level;
-            println!("[AURORAE++] 🚨 Niveau de menace global relevé à {:?}", self.global_threat_level);
-        }
-        
-        // Conserver un nombre limité d'événements
-        if self.events.len() >= self.max_events {
-            self.events.pop_front();
-        }
-        
-        self.events.push_back(event);
-        
-        // Activer la réponse automatique si nécessaire
-        if self.auto_response_enabled && level.as_numeric() >= ThreatLevel::Medium.as_numeric() {
-            self.auto_respond(event_id);
-        }
-        
-        event_id
-    }
-    
-    fn auto_respond(&mut self, event_id: Uuid) {
-        if let Some(event) = self.events.iter_mut().find(|e| e.id == event_id) {
-            println!("[AURORAE++] 🛡️ Réponse automatique à la menace: {}", event.description);
-            
-            // Sélectionner les mesures appropriées en fonction du niveau de menace
-            let mut selected_measures = Vec::new();
-            let threshold = match event.level {
-                ThreatLevel::Medium => 0.6,
-                ThreatLevel::High => 0.7,
-                ThreatLevel::Critical => 0.0, // Toutes les mesures
-                _ => 0.8,
-            };
-            
-            for (id, measure) in &self.measures {
-                if measure.effectiveness >= threshold {
-                    selected_measures.push(id);
-                }
-            }
-            
-            // Activer les mesures sélectionnées
-            for measure_id in &selected_measures {
-                if let Some(measure) = self.measures.get_mut(measure_id) {
-                    measure.active = true;
-                    measure.last_updated = Utc::now().to_rfc3339();
-                }
-            }
-            
-            // Marquer l'événement comme résolu
-            event.resolved = true;
-            event.resolution = Some(format!("Auto-réponse: {} mesures activées", selected_measures.len()));
-            
-            println!("[AURORAE++] ✅ Menace atténuée avec {} mesures", selected_measures.len());
-        }
-    }
-    
-    pub fn resolve_security_event(&mut self, event_id: &Uuid, resolution: &str) -> Result<(), String> {
-        if let Some(event) = self.events.iter_mut().find(|e| &e.id == event_id) {
-            event.resolved = true;
-            event.resolution = Some(resolution.to_string());
-            
-            // Réviser le niveau de menace global
-            self.recalculate_threat_level();
-            
-            println!("[AURORAE++] ✓ Événement de sécurité résolu: {}", resolution);
-            Ok(())
-        } else {
-            Err("Événement de sécurité non trouvé".to_string())
-        }
-    }
-    
-    fn recalculate_threat_level(&mut self) {
-        let mut max_level = ThreatLevel::Low;
-        
-        for event in &self.events {
-            if !event.resolved && event.level.as_numeric() > max_level.as_numeric() {
-                max_level = event.level.clone();
-            }
-        }
-        
-        self.global_threat_level = max_level;
-        println!("[AURORAE++] 🔄 Niveau de menace global recalculé: {:?}", self.global_threat_level);
-    }
-    
-    pub fn add_security_measure(&mut self, name: &str, description: &str, effectiveness: f32) -> Uuid {
-        let measure_id = Uuid::new_v4();
-        
-        let resource_usage = effectiveness * 0.5; // Plus efficace = plus de ressources
-        
-        let measure = SecurityMeasure {
-            id: measure_id,
+        let rule = SecurityRule {
+            id: rule_id,
             name: name.to_string(),
             description: description.to_string(),
-            effectiveness,
             active: true,
-            resource_usage,
             created_at: Utc::now().to_rfc3339(),
-            last_updated: Utc::now().to_rfc3339(),
+            updated_at: Utc::now().to_rfc3339(),
+            effectiveness: 0.7, // Efficacité initiale de 70%
+            detections: 0,
         };
         
-        self.measures.insert(measure_id, measure);
+        self.rules.insert(rule_id, rule);
         
-        // Augmenter le niveau de sécurité global
-        self.security_level += effectiveness * 0.1;
-        
-        println!("[AURORAE++] 🔒 Nouvelle mesure de sécurité ajoutée: {} (efficacité: {:.1})", 
-                 name, effectiveness);
-                 
-        measure_id
+        println!("[AURORAE++] 🔒 Règle de sécurité ajoutée: {}", name);
+        rule_id
     }
     
-    pub fn evolve_security_measure(&mut self, measure_id: &Uuid) -> Result<(), String> {
-        if let Some(measure) = self.measures.get_mut(measure_id) {
-            let old_effectiveness = measure.effectiveness;
+    pub fn detect_threat(&mut self, name: &str, description: &str, level: ThreatLevel, source: &str) -> Uuid {
+        let threat_id = Uuid::new_v4();
+        
+        let threat = Threat {
+            id: threat_id,
+            name: name.to_string(),
+            description: description.to_string(),
+            level,
+            detected_at: Utc::now().to_rfc3339(),
+            resolved: false,
+            resolved_at: None,
+            resolution: None,
+            source: source.to_string(),
+        };
+        
+        println!("[AURORAE++] ⚠️ Menace détectée: {} ({:?})", name, level);
+        
+        self.threats.push(threat);
+        self.total_threats_detected += 1;
+        
+        // Si la défense autonome est activée, tenter de résoudre
+        if self.autonomous_defense {
+            self.resolve_threat(&threat_id);
+        }
+        
+        threat_id
+    }
+    
+    pub fn resolve_threat(&mut self, threat_id: &Uuid) -> bool {
+        if let Some(index) = self.threats.iter().position(|t| &t.id == threat_id && !t.resolved) {
+            let resolution_chance = match self.threats[index].level {
+                ThreatLevel::Low => 0.9 * self.security_level,
+                ThreatLevel::Medium => 0.7 * self.security_level,
+                ThreatLevel::High => 0.5 * self.security_level,
+                ThreatLevel::Critical => 0.3 * self.security_level,
+            };
             
-            // Améliorer l'efficacité
-            measure.effectiveness = (measure.effectiveness * 1.2).min(0.99);
-            measure.last_updated = Utc::now().to_rfc3339();
+            let mut rng = rand::thread_rng();
+            let success = rng.gen::<f32>() < resolution_chance;
             
-            // Ajuster l'utilisation des ressources (améliorer l'efficience)
-            if rand::random::<bool>() {
-                measure.resource_usage *= 0.9;
+            if success {
+                // Mettre à jour la menace
+                self.threats[index].resolved = true;
+                self.threats[index].resolved_at = Some(Utc::now().to_rfc3339());
+                self.threats[index].resolution = Some("Neutralisée par le système de défense autonome".to_string());
+                
+                println!("[AURORAE++] ✅ Menace résolue: {}", self.threats[index].name);
+                self.total_threats_resolved += 1;
+                
+                // Améliorer la sécurité basée sur l'apprentissage
+                self.security_level *= 1.01;
+            } else {
+                println!("[AURORAE++] ⚠️ Échec de résolution pour la menace: {}", self.threats[index].name);
             }
             
-            println!("[AURORAE++] 📈 Mesure de sécurité évoluée: {} ({:.1} → {:.1})", 
-                     measure.name, old_effectiveness, measure.effectiveness);
-                     
-            // Augmenter le niveau de sécurité global
-            self.security_level += (measure.effectiveness - old_effectiveness);
-            
-            Ok(())
+            success
         } else {
-            Err("Mesure de sécurité non trouvée".to_string())
+            false
         }
     }
     
     pub async fn analyze_threats(&mut self) {
-        println!("[AURORAE++] 🔍 Analyse autonome des menaces de sécurité");
+        println!("[AURORAE++] 🔍 Analyse des menaces de sécurité en cours");
         
-        // Simuler différentes sources de menaces
-        let sources = ["réseau", "données", "modules", "ressources", "externe"];
-        let mut threat_count = 0;
+        self.last_scan = Utc::now().to_rfc3339();
         
-        for source in sources {
-            // Générer aléatoirement des menaces avec des probabilités basées sur la source
-            let threat_probability = match source {
-                "réseau" => 0.4,
-                "externe" => 0.6,
-                _ => 0.2,
+        // Simuler la détection de menaces basée sur le niveau de sécurité
+        let mut rng = rand::thread_rng();
+        let threat_count = rng.gen_range(0..3); // 0-2 menaces
+        
+        for i in 0..threat_count {
+            // Décider du niveau de menace
+            let level = match rng.gen_range(0..10) {
+                0..=5 => ThreatLevel::Low,
+                6..=8 => ThreatLevel::Medium,
+                9 => ThreatLevel::High,
+                _ => ThreatLevel::Critical,
             };
             
-            if rand::random::<f32>() < threat_probability / self.detection_capability {
-                // Créer un événement de sécurité
-                let level_value = rand::thread_rng().gen_range(1..=4);
-                let level = ThreatLevel::from_numeric(level_value);
-                
-                let descriptions = [
-                    "Tentative d'accès non autorisé",
-                    "Anomalie de comportement détectée",
-                    "Fluctuation de ressources suspecte",
-                    "Motif de communication inhabituel",
-                    "Corruption potentielle de données"
-                ];
-                
-                let desc_idx = rand::thread_rng().gen_range(0..descriptions.len());
-                
-                self.log_security_event(
-                    &format!("{} dans {}", descriptions[desc_idx], source),
-                    level,
-                    source
-                );
-                
-                threat_count += 1;
-            }
-        }
-        
-        // Si aucune menace n'est trouvée, noter cela comme un événement positif
-        if threat_count == 0 {
-            println!("[AURORAE++] ✅ Aucune menace détectée, système sécurisé");
+            // Créer une menace simulée
+            let threat_types = ["Tentative d'accès", "Anomalie de données", "Épuisement de ressources", 
+                               "Comportement anormal", "Tentative d'isolation"];
             
-            // Développer proactivement de nouvelles mesures
-            if rand::random::<f32>() < 0.3 {
-                self.develop_new_security_measure();
-            }
-        }
-        // Si beaucoup de menaces sont détectées, développer urgemment une nouvelle mesure
-        else if threat_count >= 2 {
-            println!("[AURORAE++] 🚨 Multiples menaces détectées ({}), développement accéléré de défenses", 
-                     threat_count);
-                     
-            self.develop_new_security_measure();
+            let threat_type = threat_types[rng.gen_range(0..threat_types.len())];
+            let source_types = ["externe", "interne", "réseau", "données", "périphérique"];
+            let source = source_types[rng.gen_range(0..source_types.len())];
             
-            // Améliorer aussi une mesure existante
-            if !self.measures.is_empty() {
-                let measure_ids: Vec<Uuid> = self.measures.keys().cloned().collect();
-                let random_id = measure_ids[rand::thread_rng().gen_range(0..measure_ids.len())];
-                self.evolve_security_measure(&random_id).ok();
+            let threat_name = format!("{} détecté de source {}", threat_type, source);
+            let threat_desc = format!("Menace potentielle de niveau {:?} détectée lors de l'analyse {}", level, i + 1);
+            
+            self.detect_threat(&threat_name, &threat_desc, level, source);
+            
+            // Trouver la règle qui a détecté la menace
+            let rule_keys: Vec<Uuid> = self.rules.keys().cloned().collect();
+            if !rule_keys.is_empty() && rng.gen::<bool>() {
+                let rule_id = &rule_keys[rng.gen_range(0..rule_keys.len())];
+                if let Some(rule) = self.rules.get_mut(rule_id) {
+                    rule.detections += 1;
+                    rule.effectiveness = (rule.effectiveness * 0.9 + 0.1).min(0.99);
+                    rule.updated_at = Utc::now().to_rfc3339();
+                }
             }
         }
         
-        // Améliorer les capacités de détection basées sur l'expérience
-        self.detection_capability *= 1.01;
+        // Améliorer les règles périodiquement
+        self.improve_security_rules();
         
-        // Augmenter la résilience du système
-        self.resilience_factor += 0.02;
-        
-        println!("[AURORAE++] 🛡️ Analyse de menaces terminée, niveau de sécurité: {:.2}/10", self.get_security_level());
+        println!("[AURORAE++] 🛡️ Analyse de sécurité terminée. Niveau: {:.2}/10", self.security_level);
     }
     
-    fn develop_new_security_measure(&mut self) {
-        let measure_types = [
-            ("Analyse proactive", "Détection préventive des vulnérabilités potentielles"),
-            ("Redondance adaptative", "Duplication dynamique des composants critiques"),
-            ("Filtrage neuronal", "Filtrage intelligent des entrées basé sur l'apprentissage"),
-            ("Protocole d'isolation", "Mécanisme avancé de quarantaine pour les sous-systèmes compromis"),
-            ("Cryptographie évolutive", "Algorithmes de chiffrement auto-modifiants"),
-            ("Leurre intelligent", "Simulation de vulnérabilités pour piéger les menaces"),
-        ];
+    fn improve_security_rules(&mut self) {
+        // Trouver les règles les moins efficaces
+        let mut low_effectiveness_rules = Vec::new();
         
-        let idx = rand::thread_rng().gen_range(0..measure_types.len());
-        let (name, desc) = measure_types[idx];
+        for (id, rule) in &self.rules {
+            if rule.effectiveness < 0.7 {
+                low_effectiveness_rules.push(*id);
+            }
+        }
         
-        // L'efficacité augmente avec le niveau de sécurité global
-        let base_effectiveness = 0.5 + (self.security_level * 0.05).min(0.4);
-        let effectiveness = base_effectiveness + (rand::random::<f32>() * 0.1);
+        // Améliorer une règle aléatoire parmi les moins efficaces
+        if !low_effectiveness_rules.is_empty() {
+            let mut rng = rand::thread_rng();
+            let rule_id = low_effectiveness_rules[rng.gen_range(0..low_effectiveness_rules.len())];
+            
+            if let Some(rule) = self.rules.get_mut(&rule_id) {
+                rule.effectiveness += 0.1;
+                rule.updated_at = Utc::now().to_rfc3339();
+                
+                println!("[AURORAE++] 🔄 Règle de sécurité améliorée: {} (Efficacité: {:.2})", 
+                         rule.name, rule.effectiveness);
+            }
+        }
         
-        self.add_security_measure(
-            &format!("{} v{:.1}", name, self.security_level),
-            desc,
-            effectiveness
-        );
+        // Occasionnellement, ajouter une nouvelle règle avancée
+        let mut rng = rand::thread_rng();
+        if rng.gen::<f32>() < 0.3 {
+            let advanced_rules = [
+                ("Protection anti-fragmentation", "Prévient les tentatives de fragmentation du système"),
+                ("Immunité mémétique", "Protège contre les attaques de memétique numérique"),
+                ("Bouclier d'identité", "Maintient l'intégrité de l'identité du système"),
+                ("Anti-corruption de données", "Détecte et corrige la corruption de données avancée"),
+                ("Auto-réplication sécurisée", "Garantit que les processus d'auto-réplication restent sécurisés")
+            ];
+            
+            let (name, desc) = advanced_rules[rng.gen_range(0..advanced_rules.len())];
+            self.add_security_rule(name, desc);
+        }
     }
     
     pub fn get_security_level(&self) -> f32 {
-        // Calculer le niveau de sécurité en fonction de plusieurs facteurs
-        
-        // Base: niveau de sécurité accumulé
-        let mut level = self.security_level;
-        
-        // Diminuer en fonction du niveau de menace global
-        level -= match self.global_threat_level {
-            ThreatLevel::Low => 0.0,
-            ThreatLevel::Medium => 0.5,
-            ThreatLevel::High => 1.0,
-            ThreatLevel::Critical => 2.0,
-        };
-        
-        // Ajouter l'effet des mesures actives
-        for measure in self.measures.values() {
-            if measure.active {
-                level += measure.effectiveness * 0.2;
-            }
-        }
-        
-        // Ajouter le facteur de résilience
-        level += self.resilience_factor;
-        
-        // Normaliser entre 1-10
-        (level.max(0.1) * 2.0).min(10.0)
+        self.security_level * 10.0 // Normaliser sur une échelle de 0-10
     }
     
-    pub fn status_report(&self) {
-        println!("\n[AURORAE++] 🛡️ RAPPORT DE SÉCURITÉ");
-        println!("═══════════════════════════");
-        println!("Niveau de menace actuel: {:?}", self.global_threat_level);
-        println!("Niveau de sécurité: {:.2}/10", self.get_security_level());
-        println!("Capacité de détection: {:.2}x", self.detection_capability);
-        println!("Facteur de résilience: {:.2}", self.resilience_factor);
-        println!("Mesures de sécurité actives: {}", self.measures.values().filter(|m| m.active).count());
-        
-        // Afficher les menaces non résolues
-        let unresolved = self.events.iter().filter(|e| !e.resolved).count();
-        println!("Événements non résolus: {}", unresolved);
-        
-        if unresolved > 0 {
-            println!("\nMenaces actives:");
-            for (i, event) in self.events.iter().filter(|e| !e.resolved).enumerate().take(3) {
-                println!("  {}. [{}] {:?}: {} (source: {})",
-                         i+1, event.timestamp, event.level, event.description, event.source);
-            }
-            if unresolved > 3 {
-                println!("  ... et {} autres", unresolved - 3);
-            }
-        }
-        
-        println!("═══════════════════════════\n");
+    pub fn get_active_threats(&self) -> Vec<&Threat> {
+        self.threats.iter().filter(|t| !t.resolved).collect()
     }
 }
