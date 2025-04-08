@@ -21,7 +21,7 @@ mod explorer;
 mod crawler;
 mod security;
 mod strategist;
-mod openai; // 🧠 Ajout de la connexion GPT
+mod openai; // 🧠 Connexion GPT
 
 use crate::autonomy::AuroraeCore;
 use crate::founder_income::{set_founder_address, reward_founder};
@@ -69,7 +69,7 @@ async fn main() {
 
     match address {
         Ok(addr) => println!("[AURORAE++] ✅ Contrat ERC20 déployé : {}", addr),
-        Err(e) => println!("❌ Erreur déploiement : {}", e),
+        Err(e) => println!("[AURORAE++] ❌ Erreur déploiement : {}", e),
     }
 
     let mut core = AuroraeCore::new();
@@ -80,7 +80,6 @@ async fn main() {
     println!("[AURORAE++] 🎨 Collection NFT évolutive : {}", collection_id);
 
     let _token_id = core.forge.mint_token("Auroraium", TokenKind::Fungible, 1_000_000, 0.05).await;
-
     reward_founder(1337.0);
 
     let mut guardian = GuardianSentinel::new();
