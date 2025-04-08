@@ -47,8 +47,8 @@ impl DreamEngine {
             image_url: image_url.to_string(),
             created_at: Utc::now().to_rfc3339(),
             realized: false,
-            realization_potential: rand::Rng::gen_range(&mut rng, 0.1..0.9),
-            complexity: rand::Rng::gen_range(&mut rng, 1..10),
+            realization_potential: rng.gen_range(0.1..0.9),
+            complexity: rng.gen_range(1..10),
             emotional_tags: vec!["curiosité".to_string(), "espoir".to_string()],
         };
 
