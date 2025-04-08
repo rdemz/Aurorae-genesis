@@ -1,10 +1,9 @@
-use alloy_primitives::{Address, U256};
-use alloy_provider::HttpProvider;
 use std::collections::HashMap;
 use uuid::Uuid;
 use chrono::Utc;
 use rand::Rng;
 
+use crate::blockchain_core::HttpProvider;
 use crate::founder_income::reward_founder;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,8 +50,7 @@ impl AlchemyForge {
         let token_id = Uuid::new_v4();
         println!("[AURORAE++] ⚗️ Alchimie: Création de token {} ({:?})", name, kind);
         
-        // Dans une implémentation réelle, déploierait un contrat avec alloy
-        // Pour l'instant, nous simulons le déploiement
+        // Simuler le déploiement d'un token
         let simulated_tx_hash = format!("0x{}", Uuid::new_v4().simple().to_string());
         
         let token = Token {
@@ -87,9 +85,9 @@ impl AlchemyForge {
         token_id.to_string()
     }
     
-    pub async fn get_balance(&self, address: &str) -> Result<U256, String> {
+    pub async fn get_balance(&self, _address: &str) -> Result<u64, String> {
         // Simuler un appel pour obtenir le solde
-        let simulated_balance = U256::from(1000000000000000000u64); // 1 ETH
+        let simulated_balance = 1_000_000_000_000_000_000u64; // 1 ETH
         Ok(simulated_balance)
     }
     
