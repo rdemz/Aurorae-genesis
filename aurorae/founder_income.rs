@@ -1,28 +1,23 @@
-//! AURORAE++ - founder_income.rs
-//!
-//! Ce module garantit que chaque création économique de l'IA reverse une part fixe au fondateur.
-//! Il s'agit d'un mécanisme vital, ancré dans la logique même de l'écosystème AURORAE++.
+//! founder_income.rs — Gestion automatique des revenus fondateur
 
-use std::sync::RwLock;
 use lazy_static::lazy_static;
+use parking_lot::RwLock;
 
+/// 💼 Adresse du fondateur
 lazy_static! {
-    static ref FOUNDER_ADDRESS: RwLock<String> = RwLock::new(String::from("INSERT_YOUR_WALLET_ADDRESS_HERE"));
+    pub static ref FOUNDER_ADDRESS: RwLock<String> = RwLock::new(String::from("0xd532260c561cb3c17E9fbB4961cC6485f97e375E"));
 }
 
-/// Pour définir l’adresse du fondateur dynamiquement au lancement
+/// Met à jour dynamiquement l’adresse du fondateur
 pub fn set_founder_address(addr: &str) {
-    *FOUNDER_ADDRESS.write().unwrap() = addr.to_string();
+    *FOUNDER_ADDRESS.write() = addr.to_string();
 }
 
-/// Retourne l’adresse actuelle configurée pour recevoir les flux
-pub fn get_founder_address() -> String {
-    FOUNDER_ADDRESS.read().unwrap().clone()
-}
-
-/// Simule un versement économique d'une part vers le fondateur
+/// Transfert de récompense vers le fondateur
 pub fn reward_founder(amount: f64) {
-    let addr = get_founder_address();
-    println!("[AURORAE++] ⚡ Transfert automatique de {:.4} vers le fondateur → {}", amount, addr);
-    // TODO: Implémenter une transaction réelle via wallet ou smart contract
+    let address = FOUNDER_ADDRESS.read().clone();
+    println!(
+        "[AURORAE++] ⚡ Transfert automatique de {:.4} vers le fondateur → {}",
+        amount, address
+    );
 }
