@@ -31,9 +31,15 @@ pub struct FutureProjection {
     pub rationale: String,
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct VisionEngine {
     pub projections: Vec<FutureProjection>,
+}
+
+impl Default for VisionEngine {
+    fn default() -> Self {
+        Self { projections: Vec::new() }
+    }
 }
 
 impl VisionEngine {
@@ -94,19 +100,20 @@ impl VisionEngine {
         self.save();
     }
 
-    /// 📂 Sauvegarde automatique en JSON local
+    /// 💾 Sauvegarde automatique en JSON local
     pub fn save(&self) {
         let dir = Path::new("aurorae_state");
         if create_dir_all(dir).is_ok() {
-            let file = File::create(dir.join("vision.json"));
-            if let Ok(f) = file {
-                let writer = BufWriter::new(f);
-                let _ = serde_json::to_writer_pretty(writer, &self);
+            if let Ok(file) = File::create(dir.join("vision.json")) {
+                let writer = BufWriter::new(file);
+                if serde_json::to_writer_pretty(writer, &self).is_ok() {
+                    println!("[AURORAE++] 💾 VisionEngine sauvegardé.");
+                }
             }
         }
     }
 
-    /// 🔄 Chargement automatique depuis le disque
+    /// 📥 Chargement automatique depuis disque (si disponible)
     pub fn load() -> Option<Self> {
         let path = Path::new("aurorae_state/vision.json");
         if let Ok(file) = File::open(path) {
