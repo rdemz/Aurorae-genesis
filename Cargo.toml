@@ -11,11 +11,11 @@ name = "aurorae"
 path = "aurorae/main.rs"
 
 [dependencies]
-tokio = { version = "1.37", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.37", features = ["macros", "rt-multi-thread", "full"] }
 ethers = "2.0.14"
 k256 = "0.13.1"
-uuid = { version = "1.7", features = ["v4", "serde"] }              # ✅ Ajout serde pour UUID
-chrono = { version = "0.4", features = ["serde"] }                  # ✅ Pour sérialiser les timestamps
+uuid = { version = "1.7", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
 rand = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -32,6 +32,7 @@ tar = "0.4"
 
 # 🧠 INTELLIGENCE STRATÉGIQUE
 async-openai = { version = "0.14", features = ["reqwest"] }
+
 # 🔧 OUTILS COMPLÉMENTAIRES
 regex = "1.10"
 lazy_static = "1.4"
