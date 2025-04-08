@@ -2,48 +2,41 @@
 name = "aurorae"
 version = "0.1.0"
 edition = "2021"
-authors = ["Toi, l’Architecte"]
-description = "AURORAE++ • Entité crypto vivante autonome"
-license = "MIT"
-repository = "https://github.com/ton-org/aurorae"
+authors = ["Aurorae Genesis Project"]
+description = "Un système autonome auto-évolutif capable d'existence indépendante"
 
 [dependencies]
-# Runtime asynchrone
-tokio = { version = "1.36", features = ["full"] }
-
-# Web3 (déploiement ERC20)
-ethers = { version = "2.0.14", features = ["abigen", "rustls"] }
-dotenv = "0.15"
-
-# Outils système et temps
-uuid = { version = "1.6", features = ["v4"] }
+tokio = { version = "1", features = ["full"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde", "clock"] }
-rand = "0.8"
-lazy_static = "1.4"
-parking_lot = "0.12"
-futures = "0.3"
-
-# JSON, fichiers, API
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-reqwest = { version = "0.11", features = ["json"] }
-
-# Logs (optionnel)
+# Bibliothèques blockchain modernes
+alloy-primitives = "0.6.0"
+alloy-sol-types = "0.6.0" 
+alloy-json-rpc = "0.6.0"
+alloy-provider = { version = "0.6.0", features = ["http"] }
+alloy-signer = "0.6.0"
+alloy-network = "0.6.0"
+dotenv = "0.15"
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+parking_lot = "0.12"
+futures = "0.3"
+lazy_static = "1.4"
+rand = "0.8"
+async-trait = "0.1"
+thiserror = "1.0"
 log = "0.4"
 env_logger = "0.10"
+ed25519-dalek = "2.0"
+sha2 = "0.10"
+base64 = "0.21"
+regex = "1.10"
 
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1
-panic = "abort"
-
-# 👇️ Point d’entrée binaire (exécutable)
 [[bin]]
 name = "aurorae"
 path = "aurorae/main.rs"
 
-# 👇️ Librairie centrale du moteur vivant
 [lib]
 name = "aurorae_lib"
 path = "aurorae/lib.rs"
