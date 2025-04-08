@@ -9,7 +9,8 @@ use crate::intelligence::IntelligenceCore;
 use crate::blockchain_core::BlockchainInterface;
 use crate::nft_minter::NFTMinter;
 
-pub struct AutonomyCore {
+/// 💠 Cœur de l'autonomie systémique d'AURORAE++
+pub struct AuroraeCore {
     pub economy: EconomyEngine,
     pub intelligence: IntelligenceCore,
     pub forge: AlchemyEngine,
@@ -17,7 +18,8 @@ pub struct AutonomyCore {
     pub nft_minter: NFTMinter,
 }
 
-impl AutonomyCore {
+impl AuroraeCore {
+    /// 🧬 Crée une nouvelle instance autonome avec tous les moteurs connectés
     pub fn new() -> Self {
         Self {
             economy: EconomyEngine::new(),
@@ -28,12 +30,14 @@ impl AutonomyCore {
         }
     }
 
+    /// 🔗 Simule la création d’une identité blockchain unique pour l’entité
     pub async fn create_blockchain_presence(&self) -> String {
         let chain_id = format!("chain-{}", Uuid::new_v4());
         println!("[AURORAE++] 🔗 Chaîne autonome créée : {chain_id}");
         chain_id
     }
 
+    /// 🧠 Initialise tous les sous-systèmes pour créer un réseau vivant auto-fonctionnel
     pub async fn create_autonomous_network(&mut self) {
         let _chain_id = self.create_blockchain_presence().await;
 
@@ -51,16 +55,18 @@ impl AutonomyCore {
         println!("[AURORAE++] ✅ Réseau vivant initialisé avec succès.");
     }
 
+    /// ♻️ Déclenche les cycles d'évolution naturelle du réseau vivant
     pub async fn evolve(&mut self) {
         self.intelligence.improve().await;
         self.economy.innovate();
 
-        let bonus_funding = 1000.0;
+        let bonus_funding = 1_000.0;
         self.economy.add_funds(bonus_funding);
 
         println!("[AURORAE++] 🧠⚙️ Système auto-évolué avec succès.");
     }
 
+    /// 🔍 Analyse en direct du niveau cognitif et de l’état économique
     pub fn analyze(&self) {
         let level = self.intelligence.get_intelligence_level();
         println!(
@@ -71,6 +77,7 @@ impl AutonomyCore {
         self.economy.financial_report();
     }
 
+    /// 💭 Simule un flux de pensée actif à partir du moteur cognitif
     pub fn simulate_thoughts(&self) {
         self.intelligence.simulate_thought();
         println!("[AURORAE++] 🧬 Pensées autonomes simulées.");
