@@ -1,5 +1,6 @@
 use uuid::Uuid;
 use chrono::Utc;
+use rand::Rng;
 
 // Fonction pour valider un code ou une action du système
 pub fn validate_operation(operation_type: &str, content: &str) -> Result<ValidationResult, String> {
