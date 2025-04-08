@@ -8,37 +8,42 @@ license = "MIT"
 repository = "https://github.com/ton-org/aurorae"
 
 [dependencies]
-# Async runtime
+# Runtime asynchrone
 tokio = { version = "1.36", features = ["full"] }
 
-# Web3 / smart contract
+# Web3 (déploiement ERC20)
 ethers = { version = "2.0.14", features = ["abigen", "rustls"] }
 dotenv = "0.15"
 
-# Time & utils
-chrono = { version = "0.4", features = ["serde", "clock"] }
+# Outils système et temps
 uuid = { version = "1.6", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde", "clock"] }
 rand = "0.8"
 lazy_static = "1.4"
-futures = "0.3"
 parking_lot = "0.12"
+futures = "0.3"
 
-# JSON, API, files
+# JSON, fichiers, API
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 reqwest = { version = "0.11", features = ["json"] }
 
-# Logging (optionnel)
+# Logs (optionnel)
 log = "0.4"
 env_logger = "0.10"
-
-# Crates expérimentales possibles
-# async-trait = "0.1"
-# walkdir = "2.4"
-# glob = "0.3"
 
 [profile.release]
 opt-level = 3
 lto = true
 codegen-units = 1
 panic = "abort"
+
+# 👇️ Point d’entrée binaire (exécutable)
+[[bin]]
+name = "aurorae"
+path = "aurorae/main.rs"
+
+# 👇️ Librairie centrale du moteur vivant
+[lib]
+name = "aurorae_lib"
+path = "aurorae/lib.rs"
