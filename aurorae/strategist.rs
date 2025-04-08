@@ -50,7 +50,7 @@ impl Strategist {
                     .build()
                     .unwrap(),
             ])
-            .max_tokens(60)
+             .max_tokens(60u16)
             .build()
             .unwrap();
 
