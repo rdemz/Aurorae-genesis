@@ -21,7 +21,6 @@ mod explorer;
 mod crawler;
 mod security;
 mod strategist;
-mod openai; // 🧠 Connexion GPT
 
 use crate::autonomy::AuroraeCore;
 use crate::founder_income::{set_founder_address, reward_founder};
@@ -113,7 +112,7 @@ async fn main() {
     trigger_generation("./generated_modules", "energy_core");
     mutate_module_code("./src/aurorae/autonomy.rs");
 
-    let mut strategist = Strategist::new("sk-YOUR-OPENAI-KEY");
+    let strategist = Strategist::new("sk-YOUR-OPENAI-KEY");
 
     sleep(Duration::from_secs(5)).await;
 
