@@ -258,3 +258,4 @@ impl SecuritySystem {
         self.threats.iter().filter(|t| !t.resolved).collect()
     }
 }
+
