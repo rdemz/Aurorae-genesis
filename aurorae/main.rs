@@ -22,7 +22,7 @@ mod crawler;
 mod security;
 
 use crate::autonomy::AuroraeCore;
-use crate::founder_income::set_founder_address;
+use crate::founder_income::{set_founder_address, reward_founder};
 use crate::brain::boot_brain;
 use crate::learning::scan_feed_and_learn;
 use crate::deployer::Deployer;
@@ -37,6 +37,7 @@ use crate::crawler::{clone_repo, clear_feed};
 use crate::mutation::mutate_module_code;
 use crate::security::SecuritySystem;
 use crate::explorer::search_best_rust_chains;
+use crate::alchemy::TokenKind;
 
 use tokio::time::{sleep, Duration};
 
@@ -75,6 +76,10 @@ async fn main() {
     let collection_id = core.nft_minter.create_evolutionary_collection();
     println!("[AURORAE++] 🎨 Collection NFT évolutive : {}", collection_id);
 
+    let _token_id = core.forge.mint_token("Auroraium", TokenKind::Fungible, 1_000_000, 0.05).await;
+
+    reward_founder(1337.0);
+
     let mut guardian = GuardianSentinel::new();
     guardian.register_module("autonomy");
 
@@ -99,6 +104,7 @@ async fn main() {
     security.initialize_defenses();
 
     clone_repo("https://github.com/paritytech/substrate").ok();
+    clear_feed().ok();
     search_best_rust_chains();
 
     trigger_generation("./generated_modules", "energy_core");
