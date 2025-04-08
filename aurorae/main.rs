@@ -153,7 +153,7 @@ async fn main() {
     trigger_generation("./generated_modules", "energy_core");
     mutate_module_code("./src/aurorae/autonomy.rs");
 
-    let strategist = Strategist::new("sk-YOUR-OPENAI-KEY");
+    let strategist = Strategist::new("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");
 
     sleep(Duration::from_secs(5)).await;
 
