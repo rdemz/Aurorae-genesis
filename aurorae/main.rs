@@ -14,8 +14,8 @@ mod reproduction;
 mod blockchain_core;
 mod mutation;
 mod generator;
-mod knowledge;
-mod learning;
+mod knowledge; // Importer la mémoire vivante
+mod learning;  // Importer le module learning
 mod network_builder;
 mod explorer;
 mod crawler;
@@ -41,6 +41,8 @@ use crate::explorer::search_best_rust_chains;
 use crate::alchemy::TokenKind;
 use crate::strategist::Strategist;
 
+use crate::knowledge::{KnowledgeBase}; // Utiliser KnowledgeBase pour gérer les patterns
+
 use tokio::time::{sleep, Duration};
 
 #[tokio::main]
@@ -55,7 +57,9 @@ async fn main() {
         brain_lock.cycle();
     }
 
-    let patterns = scan_feed_and_learn();
+    // Charger et enrichir la mémoire vivante avec les patterns GitHub appris
+    let mut knowledge_base = KnowledgeBase::load(); // Charger la base de savoir existante
+    let patterns = scan_feed_and_learn(&mut knowledge_base); // Apprendre et ajouter à la mémoire
     println!("[AURORAE++] 📚 Patterns GitHub appris : {}", patterns.len());
 
     let provider = BlockchainInterface::get_http_provider("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY").unwrap();
