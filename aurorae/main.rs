@@ -139,7 +139,10 @@ async fn main() {
     let decision_net = DecisionNet::new(&vs, 10, vec![64, 32, 16], 2);
     let mut optimizer = nn::Adam::default().build(&vs, 1e-3).unwrap();
 
-    let mut learning_agent = LearningAgent::new(vec!["generate_code", "refactor_code", "deploy_contract"]);
+    let mut learning_agent = LearningAgent::new(
+        vec!["generate_code".to_string(), "refactor_code".to_string(), "deploy_contract".to_string()],
+        "initial_state".to_string()
+    );
 
     loop {
         {
