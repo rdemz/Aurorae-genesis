@@ -1,8 +1,6 @@
 extern crate tch;
 use tch::{nn, Device, Tensor};
-use crate::tch::nn::{ModuleT, OptimizerConfig};  // Ajout des imports nécessaires pour forward_t et build
 
-// Crée un réseau de neurones avec des couches linéaires
 pub struct DecisionNet {
     pub net: nn::Sequential,
 }
@@ -14,19 +12,19 @@ impl DecisionNet {
         // Ajouter les couches cachées
         let mut prev_size = input_size;
         for &size in &hidden_sizes {
-            net = net.add(nn::linear(vs, prev_size, size, Default::default()));
+            net = net.add(nn::linear(vs.root(), prev_size, size, Default::default()));  // Utiliser vs.root()
             net = net.add_fn(|xs| xs.relu());
             prev_size = size;
         }
 
         // Ajouter la couche de sortie
-        net = net.add(nn::linear(vs, prev_size, output_size, Default::default()));
+        net = net.add(nn::linear(vs.root(), prev_size, output_size, Default::default()));  // Utiliser vs.root()
 
         DecisionNet { net }
     }
 
     pub fn forward(&self, input: Tensor) -> Tensor {
-        self.net.forward_t(&input, false) // Utilisation de forward_t pour la gestion du paramètre 'train'
+        self.net.forward(&input)
     }
 
     // Entraîner le réseau
