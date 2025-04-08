@@ -1,5 +1,4 @@
 mod autonomy;
-mod autonomy::core;
 mod alchemy;
 mod deployer;
 mod economy;
@@ -22,7 +21,7 @@ mod explorer;
 mod crawler;
 mod security;
 
-use crate::autonomy::core::AuroraeCore; // Corrected import path
+use crate::autonomy::core::AuroraeCore;
 use crate::founder_income::set_founder_address;
 use crate::brain::boot_brain;
 use crate::learning::scan_feed_and_learn;
