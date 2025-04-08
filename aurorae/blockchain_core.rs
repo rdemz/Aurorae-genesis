@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use uuid::Uuid;
-use std::time::{Duration, SystemTime};
+use rand::Rng;
 
 pub struct HttpProvider {
     url: String,
