@@ -33,7 +33,7 @@ impl GeneratedModule {
 
         // Exécution de l'analyse de code avant la sauvegarde
         let analysis_result = analyze(&self.content);
-        if !analysis_result.is_valid() {
+        if !analysis_result.warnings.is_empty() {  // Vérification des avertissements dans l'analyse
             // Si des erreurs sont présentes, effectuer un refactoring
             println!("[AURORAE++] ⚠️ Erreurs détectées dans le code, refactoring...");
             self.refactor_code();
@@ -43,7 +43,7 @@ impl GeneratedModule {
 
         // Exécution de l'analyse avec Clippy pour détecter les problèmes de style
         let clippy_result = run_clippy(&self.content);
-        if !clippy_result.is_valid() {
+        if !clippy_result.warnings.is_empty() {  // Vérification des avertissements dans les résultats de Clippy
             println!("[AURORAE++] ⚠️ Clippy a trouvé des avertissements, les suggestions seront appliquées.");
             // Appliquer les suggestions Clippy pour améliorer le code généré
             self.apply_clippy_suggestions();
