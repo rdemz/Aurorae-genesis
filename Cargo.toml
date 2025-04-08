@@ -16,7 +16,7 @@ path = "aurorae/main.rs"
 tokio = { version = "1.37", features = ["macros", "rt-multi-thread"] }
 
 # Web3 et déploiement EVM (ethers-rs)
-ethers = { version = "2.0", features = ["abigen", "providers", "signers"] }
+ethers = { version = "6.13.5", features = ["abigen", "providers", "signers"] }
 
 # UUID pour identifiants uniques
 uuid = { version = "1.7", features = ["v4"] }
