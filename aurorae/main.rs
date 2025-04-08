@@ -27,6 +27,16 @@ use crate::brain::boot_brain;
 use crate::learning::scan_feed_and_learn;
 use crate::deployer::Deployer;
 use crate::blockchain_core::BlockchainInterface;
+use crate::guardian::GuardianSentinel;
+use crate::dream::DreamEngine;
+use crate::reproduction::ReproductionEngine;
+use crate::validator::check_integrity;
+use crate::vision::VisionEngine;
+use crate::generator::trigger_generation;
+use crate::crawler::{clone_repo, clear_feed};
+use crate::mutation::mutate_module_code;
+use crate::security::SecuritySystem;
+use crate::explorer::search_best_rust_chains;
 
 use tokio::time::{sleep, Duration};
 
@@ -34,54 +44,82 @@ use tokio::time::{sleep, Duration};
 async fn main() {
     println!("[AURORAE++] 🚀 Lancement du système Aurorae-genesis");
 
-    // 🔐 Adresse fondateur
     set_founder_address("0xFd4456F8d982276Ac7d2294E66Dc8aCc097f0043");
 
-    // 🧠 Initialisation cerveau
     let brain = boot_brain();
     {
         let mut brain_lock = brain.write();
         brain_lock.cycle();
     }
 
-    // 📚 Scan GitHub
     let patterns = scan_feed_and_learn();
-    println!("[AURORAE++] 📚 Patterns appris : {}", patterns.len());
+    println!("[AURORAE++] 📚 Patterns GitHub appris : {}", patterns.len());
 
-    // 🌐 Déploiement ERC20 via ALCHEMY
     let provider = BlockchainInterface::get_http_provider("https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY").unwrap();
-    
-    // Corrected function call with 4 arguments instead of 5
     let address = Deployer::deploy_contract(
         provider,
-        "INSERT_YOUR_PRIVATE_KEY_HERE", // Added private key as the correct second argument
-        "auroraium_erc20.json",         // ABI path
-        "auroraium_bytecode.json"       // Bytecode path
+        "INSERT_YOUR_PRIVATE_KEY_HERE",
+        "auroraium_erc20.json",
+        "auroraium_bytecode.json"
     ).await;
 
     match address {
-        Ok(addr) => println!("[AURORAE++] ✅ Contrat déployé : {}", addr),
+        Ok(addr) => println!("[AURORAE++] ✅ Contrat ERC20 déployé : {}", addr),
         Err(e) => println!("❌ Erreur déploiement : {}", e),
     }
 
-    // 🌱 Initialisation moteur
     let mut core = AuroraeCore::new();
     core.economy.initialize();
-core.intelligence.initialize();
+    core.intelligence.initialize();
 
-    // 🎨 Création NFT
     let collection_id = core.nft_minter.create_evolutionary_collection();
-    println!("[AURORAE++] 🎨 Collection NFT : {}", collection_id);
+    println!("[AURORAE++] 🎨 Collection NFT évolutive : {}", collection_id);
 
-    // ♻️ Boucle vivante
+    let mut guardian = GuardianSentinel::new();
+    guardian.register_module("autonomy");
+
+    let mut dreamer = DreamEngine::new();
+    dreamer.imagine("AI Dream 1", "Créer sa propre chaîne secondaire", "https://image-url.com/dream.jpg");
+
+    let mut vision = VisionEngine::new();
+    vision.add_projection(
+        crate::vision::ObjectiveType::ExpandChains,
+        30,
+        9,
+        "Déployer 3 sous-chaînes autonomes"
+    );
+
+    let mut reproduction = ReproductionEngine::new();
+    reproduction.spawn_instance("Clone V1", vec!["autonomy", "dream"]);
+
+    let integrity = check_integrity("core");
+    println!("[AURORAE++] 🔍 Intégrité du noyau : {:?}", integrity.status);
+
+    let mut security = SecuritySystem::new();
+    security.initialize_defenses();
+
+    clone_repo("https://github.com/paritytech/substrate").ok();
+    search_best_rust_chains();
+
+    trigger_generation("./generated_modules", "energy_core");
+    mutate_module_code("./src/aurorae/autonomy.rs");
+
+    sleep(Duration::from_secs(5)).await;
+
     loop {
         {
             let mut brain_lock = brain.write();
             brain_lock.cycle();
         }
 
-        core.intelligence.improve().await;
-        core.economy.innovate();
+        core.simulate_thoughts();
+        core.analyze();
+        core.evolve().await;
+
+        dreamer.dream_cycle();
+        vision.roadmap();
+        guardian.status_report();
+        security.analyze_threats().await;
 
         sleep(Duration::from_secs(10)).await;
     }
