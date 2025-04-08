@@ -1,7 +1,8 @@
 extern crate tch;
 use tokio::time::{sleep, Duration};
 use std::path::Path;
-use tch::{nn, Device};
+use tch::{nn, Device, Tensor};
+use tch::nn::OptimizerConfig; // Importer le trait OptimizerConfig
 
 mod autonomy;
 mod alchemy;
