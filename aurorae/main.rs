@@ -66,7 +66,8 @@ async fn main() {
 
     // 🌱 Initialisation moteur
     let mut core = AuroraeCore::new();
-    core.initialize().await;
+    core.economy.initialize();
+core.intelligence.initialize();
 
     // 🎨 Création NFT
     let collection_id = core.nft_minter.create_evolutionary_collection();
