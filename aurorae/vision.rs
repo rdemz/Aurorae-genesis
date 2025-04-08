@@ -5,8 +5,12 @@
 
 use chrono::Utc;
 use uuid::Uuid;
+use serde::{Serialize, Deserialize};
+use std::fs::{create_dir_all, File};
+use std::io::{BufReader, BufWriter};
+use std::path::Path;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObjectiveType {
     ImproveLearning,
     OptimizeEconomy,
@@ -17,7 +21,7 @@ pub enum ObjectiveType {
     MaximizeAutonomy,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FutureProjection {
     pub id: Uuid,
     pub created_at: String,
@@ -27,14 +31,14 @@ pub struct FutureProjection {
     pub rationale: String,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct VisionEngine {
     pub projections: Vec<FutureProjection>,
 }
 
 impl VisionEngine {
     pub fn new() -> Self {
-        Self { projections: vec![] }
+        Self::load().unwrap_or_default()
     }
 
     pub fn add_projection(&mut self, target: ObjectiveType, horizon_days: u32, priority: u8, rationale: &str) {
@@ -48,11 +52,12 @@ impl VisionEngine {
         };
 
         println!(
-            "[AURORAE++] 🧠 Vision projetée : {:?} ({} jours) • Priorité {} → {}",
+            "[AURORAE++] 🧐 Vision projetée : {:?} ({} jours) • Priorité {} → {}",
             proj.target, proj.horizon_days, proj.priority, proj.rationale
         );
 
         self.projections.push(proj);
+        self.save();
     }
 
     pub fn roadmap(&self) {
@@ -84,6 +89,31 @@ impl VisionEngine {
                 before - after,
                 after
             );
+        }
+
+        self.save();
+    }
+
+    /// 📂 Sauvegarde automatique en JSON local
+    pub fn save(&self) {
+        let dir = Path::new("aurorae_state");
+        if create_dir_all(dir).is_ok() {
+            let file = File::create(dir.join("vision.json"));
+            if let Ok(f) = file {
+                let writer = BufWriter::new(f);
+                let _ = serde_json::to_writer_pretty(writer, &self);
+            }
+        }
+    }
+
+    /// 🔄 Chargement automatique depuis le disque
+    pub fn load() -> Option<Self> {
+        let path = Path::new("aurorae_state/vision.json");
+        if let Ok(file) = File::open(path) {
+            let reader = BufReader::new(file);
+            serde_json::from_reader(reader).ok()
+        } else {
+            None
         }
     }
 }
