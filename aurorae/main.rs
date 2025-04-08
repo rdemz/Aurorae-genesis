@@ -95,7 +95,8 @@ async fn main() {
     );
 
     let mut reproduction = ReproductionEngine::new();
-    reproduction.spawn_instance("Clone V1", vec!["autonomy", "dream"]);
+    let first_clone = reproduction.spawn_instance("Clone V1", vec!["autonomy", "dream"]);
+    println!("[AURORAE++] 🌱 ID clone initial : {}", first_clone.id);
 
     let integrity = check_integrity("core");
     println!("[AURORAE++] 🔍 Intégrité du noyau : {:?}", integrity.status);
@@ -127,6 +128,12 @@ async fn main() {
         guardian.status_report();
         security.analyze_threats().await;
 
-        sleep(Duration::from_secs(10)).await;
+        // 🧬 ➕ Crée un nouveau clone à chaque cycle de 30s si la population est < 5
+        if reproduction.get_active_instances().len() < 5 {
+            let next = reproduction.spawn_instance("AutoReproduction", vec!["economy", "intelligence"]);
+            println!("[AURORAE++] 🤖 Clone auto-répliqué : {}", next.id);
+        }
+
+        sleep(Duration::from_secs(30)).await;
     }
 }
