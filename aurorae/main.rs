@@ -26,6 +26,7 @@ mod rust_analyzer;      // Importer le module d'analyse
 mod refactor;           // Importer le module de refactoring
 mod pattern_extractor; // Importer le module d'extraction de patterns
 mod clippy_integration; // Importer l'intégration de Clippy
+mod update_checker;    // Importer la vérification de mise à jour
 
 use crate::autonomy::AuroraeCore;
 use crate::founder_income::{set_founder_address, reward_founder};
@@ -84,7 +85,7 @@ async fn main() {
     println!("[AURORAE++] Code après refactorisation : {}", refactored_code);
 
     // Extraire les patterns de code à partir des projets clonés avec pattern_extractor.rs
-    let dir = Path::new("path/https://github.com/rdemz/Aurorae-genesis");  // Assurez-vous de mettre le bon chemin
+    let dir = Path::new("path/to/your/github/repo");  // Assurez-vous de mettre le bon chemin
     let extracted_patterns = pattern_extractor::extract_patterns_from_directory(&dir);
     for pattern in extracted_patterns {
         println!("[AURORAE++] 🎯 Pattern extrait : {:?}", pattern);
