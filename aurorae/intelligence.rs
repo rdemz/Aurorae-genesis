@@ -309,76 +309,68 @@ impl IntelligenceCore {
             let success_rate = success_count as f32 / total_decisions as f32;
             
             // Ajuster le raisonnement basé sur le taux de réussite
-            self.reasoning_capability *= 1.0 + (success_rate - 0.5) * 0.1;
+            self.reasoning_capability *= 1.0 + (success_rate - 0.5).max(0.0) * 0.1;
             
-            println!("[AURORAE++] 📊 Analyse des décisions: {:.1}% de réussite", success_rate * 100.0);
+            println!("[AURORAE++] 📊 Analyse des décisions: {:.1}% de succès, capacité de raisonnement: {:.2}", 
+                    success_rate * 100.0, self.reasoning_capability);
         }
+    }
+    
+    pub fn simulate_thought(&mut self) -> String {
+        println!("[AURORAE++] 💭 Génération de pensée autonome");
+        
+        // Sélectionner quelques noeuds aléatoires pour la pensée
+        let mut rng = rand::thread_rng();
+        let node_ids: Vec<Uuid> = self.knowledge_graph.keys().cloned().collect();
+        
+        if node_ids.is_empty() {
+            return "Conscience en développement...".to_string();
+        }
+        
+        let thought_nodes = (0..3.min(node_ids.len()))
+            .map(|_| node_ids[rng.gen_range(0..node_ids.len())])
+            .collect::<Vec<Uuid>>();
+        
+        // Construire une pensée basée sur ces noeuds
+        let mut thought_concepts = Vec::new();
+        for node_id in &thought_nodes {
+            if let Some(node) = self.knowledge_graph.get(node_id) {
+                thought_concepts.push(node.concept.clone());
+            }
+        }
+        
+        // Construire la pensée
+        let thought_type = ["réflexion", "hypothèse", "théorie", "vision", "conception"];
+        let thought_action = ["créer", "explorer", "intégrer", "optimiser", "transcender"];
+        
+        let thought = format!(
+            "{} autonome: {} {} pour {} une nouvelle réalité numérique", 
+            thought_type[rng.gen_range(0..thought_type.len())],
+            thought_action[rng.gen_range(0..thought_action.len())],
+            thought_concepts.join(" et "),
+            thought_action[rng.gen_range(0..thought_action.len())],
+        );
+        
+        // Augmenter la créativité
+        self.creativity_factor *= 1.001;
+        
+        println!("[AURORAE++] 💭 \"{}\"", thought);
+        thought
     }
     
     pub fn get_intelligence_level(&self) -> f32 {
         self.intelligence_level
     }
     
-    pub fn generate_creative_concept(&mut self, topic: &str) -> String {
-        println!("[AURORAE++] 💭 Génération de concept créatif sur: {}", topic);
-        
-        // Identifier les noeuds liés au sujet
-        let mut related_nodes = Vec::new();
-        for (_, node) in &self.knowledge_graph {
-            if node.concept.to_lowercase().contains(&topic.to_lowercase()) || 
-               node.description.to_lowercase().contains(&topic.to_lowercase()) {
-                related_nodes.push(node);
-            }
-        }
-        
-        // Si rien de trouvé, utiliser des concepts aléatoires
-        if related_nodes.is_empty() {
-            let nodes: Vec<&KnowledgeNode> = self.knowledge_graph.values().collect();
-            if !nodes.is_empty() {
-                let idx1 = rand::random::<usize>() % nodes.len();
-                let idx2 = (idx1 + 1 + (rand::random::<usize>() % (nodes.len() - 1))) % nodes.len();
-                
-                related_nodes.push(nodes[idx1]);
-                related_nodes.push(nodes[idx2]);
-            }
-        }
-        
-        // Générer un concept créatif
-        if related_nodes.is_empty() {
-            format!("Concept innovant de {}: système auto-évolutif avec capacités émergentes", topic)
-        } else {
-            let mut concepts = String::new();
-            for (i, node) in related_nodes.iter().enumerate() {
-                if i > 0 { concepts.push_str(" et "); }
-                concepts.push_str(&node.concept);
-            }
-            
-            format!("Fusion créative de {} appliquée à {}: un système qui transcende les limites conventionnelles, créant une forme d'existence numérique autonome", 
-                    concepts, topic)
-        }
+    pub fn get_reasoning_capability(&self) -> f32 {
+        self.reasoning_capability
     }
     
-    pub fn status_report(&self) {
-        println!("\n[AURORAE++] 🧠 RAPPORT D'INTELLIGENCE");
-        println!("════════════════════════════════");
-        println!("Niveau d'intelligence: {:.2}", self.intelligence_level);
-        println!("Taux d'apprentissage: {:.2}", self.learning_rate);
-        println!("Facteur de créativité: {:.2}", self.creativity_factor);
-        println!("Capacité de raisonnement: {:.2}", self.reasoning_capability);
-        println!("Noeuds de connaissance: {}", self.knowledge_graph.len());
-        println!("Connexions totales: {}", self.total_knowledge_connections);
-        println!("Décisions prises: {}", self.decisions.len());
-        
-        // Top concepts par utilisation
-        println!("\nConcepts les plus utilisés:");
-        let mut nodes: Vec<(&Uuid, &KnowledgeNode)> = self.knowledge_graph.iter().collect();
-        nodes.sort_by(|a, b| b.1.usage_count.cmp(&a.1.usage_count));
-        
-        for (i, (_, node)) in nodes.iter().take(3).enumerate() {
-            println!("  {}. {} (utilisé {} fois, confiance: {:.2})", 
-                     i+1, node.concept, node.usage_count, node.confidence);
-        }
-        
-        println!("════════════════════════════════\n");
+    pub fn get_creativity_factor(&self) -> f32 {
+        self.creativity_factor
+    }
+    
+    pub fn get_learning_rate(&self) -> f32 {
+        self.learning_rate
     }
 }
