@@ -1,5 +1,3 @@
-//! deployer.rs — Déploiement de contrats EVM avec ethers-rs 2.0.14
-
 use std::fs;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -8,7 +6,7 @@ use ethers::prelude::*;
 use ethers::types::{Address, Bytes};
 use ethers::contract::ContractFactory;
 use ethers::middleware::SignerMiddleware;
-use ethers::signers::LocalWallet;
+use ethers::signers::{LocalWallet, Wallet, SigningKey};
 use ethers::abi::Abi;
 
 use crate::blockchain_core::HttpProvider;
@@ -22,24 +20,24 @@ impl Deployer {
         abi_path: &str,
         bytecode_path: &str,
     ) -> Result<Address, String> {
-        // 📄 Lecture de l’ABI et du bytecode
+        // 📄 Lecture de l'ABI et du bytecode
         let abi_content = fs::read_to_string(abi_path)
             .map_err(|e| format!("Erreur lecture ABI: {}", e))?;
         let bytecode = fs::read_to_string(bytecode_path)
             .map_err(|e| format!("Erreur lecture bytecode: {}", e))?;
 
-        // ✅ Chargement de l’ABI
+        // ✅ Chargement de l'ABI
         let parsed_abi: Abi = Abi::load(abi_content.as_bytes())
             .map_err(|e| format!("ABI invalide: {}", e))?;
 
         // ✅ Parsing du bytecode → Bytes (type ethers)
         let parsed_bytecode = bytecode
-    .parse::<ethers::types::Bytes>()
-    .map_err(|e| format!("Bytecode invalide: {}", e))?;
+            .parse::<ethers::types::Bytes>()
+            .map_err(|e| format!("Bytecode invalide: {}", e))?;
         
         // 🔐 Construction du wallet
         let wallet: LocalWallet = private_key
-            .parse()
+            .parse::<Wallet<SigningKey>>()
             .map_err(|e| format!("Clé privée invalide: {}", e))?
             .with_chain_id(1u64); // à adapter selon le réseau
 
@@ -59,7 +57,7 @@ impl Deployer {
             .map_err(|e| format!("Erreur déploiement: {}", e))?;
 
         println!(
-            "[AURORAE++] ✅ Contrat déployé à l’adresse : {:?}",
+            "[AURORAE++] ✅ Contrat déployé à l'adresse : {:?}",
             contract.address()
         );
 
