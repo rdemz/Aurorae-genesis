@@ -99,3 +99,4 @@ fn find_rust_files(base: &Path) -> Vec<PathBuf> {
     }
     results
 }
+
