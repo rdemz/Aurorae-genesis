@@ -8,8 +8,7 @@ use std::sync::Arc;
 use parking_lot::RwLock;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
-
-use crate::reproduction::{ReproductionEngine, AuroraInstance};
+use crate::reproduction::ReproductionEngine;
 
 #[derive(Debug, Clone)]
 pub enum Intent {
@@ -25,7 +24,7 @@ pub enum Intent {
     GenerateCode,
     BuildEcosystem,
     SelfUpgrade,
-    Replicate, // 🧬 Auto-réplication ajoutée
+    SelfReplicate,
 }
 
 #[derive(Debug)]
@@ -49,12 +48,12 @@ impl Thought {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct BrainCore {
     pub cortex: VecDeque<Thought>,
     pub memory: Vec<Thought>,
     pub active: bool,
-    pub reproduction: ReproductionEngine, // 🧬 Branche de réplication
+    pub replicator: Option<ReproductionEngine>,
 }
 
 impl BrainCore {
@@ -63,7 +62,7 @@ impl BrainCore {
             cortex: VecDeque::new(),
             memory: vec![],
             active: true,
-            reproduction: ReproductionEngine::new(),
+            replicator: Some(ReproductionEngine::new()),
         }
     }
 
@@ -87,7 +86,7 @@ impl BrainCore {
     }
 
     fn process_thought(&mut self, thought: Thought) {
-        println!("[AURORAE++] 🧠 Traitement de {:?} (urgence: {})", thought.intent, thought.urgency);
+        println!("[AURORAE++] Processing {:?} (urgency: {})", thought.intent, thought.urgency);
 
         match thought.intent {
             Intent::GenerateChain => self.delegate_to("generator"),
@@ -102,36 +101,40 @@ impl BrainCore {
             Intent::Rest => self.rest(),
             Intent::Observe => self.delegate_to("learning"),
             Intent::Dream => self.delegate_to("dream"),
-            Intent::Replicate => self.replicate_self(), // 🧬 Auto-replication déclenchée
+            Intent::SelfReplicate => self.replicate("Clone dynamique autonome", vec!["autonomy", "intelligence"]),
         }
 
         self.memory.push(thought);
     }
 
-    fn replicate_self(&mut self) {
-        println!("[AURORAE++] 🧬 Déclenchement de la réplication consciente...");
-        let instance = self.reproduction.spawn_instance(
-            "Auto-clone stratégique",
-            vec!["brain", "dream", "mutation", "generator"]
-        );
-        println!("[AURORAE++] ✅ Nouvelle instance générée : {}", instance.id);
+    fn replicate(&mut self, purpose: &str, modules: Vec<&str>) {
+        if let Some(engine) = &mut self.replicator {
+            let instance = engine.spawn_instance(purpose, modules);
+            println!("[AURORAE++] 🤖 Réplication IA déclenchée : ID {}", instance.id);
+        }
     }
 
     fn delegate_to(&self, module: &str) {
-        println!("[AURORAE++] 🧠 Délégation vers le module : {}", module);
+        println!("[AURORAE++] Delegating to module: {}", module);
+        // TODO: connecter dynamiquement au module réel
     }
 
     fn rest(&mut self) {
-        println!("[AURORAE++] 💤 Cycle de micro-repos enclenché.");
+        println!("[AURORAE++] Entering micro-rest cycle.");
         std::thread::sleep(std::time::Duration::from_millis(250));
     }
 }
 
+// Entrée principale du noyau cérébral
 pub fn boot_brain() -> Arc<RwLock<BrainCore>> {
-    let brain = BrainCore::new();
-    let shared = Arc::new(RwLock::new(brain));
+    let mut brain = BrainCore::new();
 
+    // Pensée initiale : se reproduire pour tester le cycle de réplication
+    brain.push_thought(Thought::new(Intent::SelfReplicate, 255));
+
+    let shared = Arc::new(RwLock::new(brain));
     let b = shared.clone();
+
     std::thread::spawn(move || {
         b.write().cycle();
     });
