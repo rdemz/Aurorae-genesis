@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-use rand::Rng; // Pour générer des valeurs aléatoires
+use rand::Rng;
 
-// Définir l'agent d'apprentissage par renforcement
 pub struct LearningAgent {
     pub actions: Vec<String>, // Liste des actions possibles
     pub state: String, // L'état actuel du système
@@ -12,10 +11,8 @@ pub struct LearningAgent {
 }
 
 impl LearningAgent {
-    // Création d'un nouvel agent d'apprentissage
     pub fn new(actions: Vec<String>, initial_state: &str) -> Self {
         let mut q_table = HashMap::new();
-        // Initialiser la table Q avec des valeurs nulles pour chaque combinaison état-action
         for action in &actions {
             let mut action_map = HashMap::new();
             action_map.insert(initial_state.to_string(), 0.0);
@@ -32,25 +29,19 @@ impl LearningAgent {
         }
     }
 
-    // Choisir une action (avec exploration ou exploitation)
     pub fn choose_action(&mut self) -> String {
         let mut rng = rand::thread_rng();
 
-        // Exploration vs exploitation : on choisit une action aléatoire ou la meilleure action
         if rng.gen::<f32>() < self.exploration_rate {
-            // Exploration : choisir une action au hasard
             let action = &self.actions[rng.gen_range(0..self.actions.len())];
             action.to_string()
         } else {
-            // Exploitation : choisir l'action avec la meilleure Q-value pour l'état actuel
             let best_action = self.actions.iter()
                 .max_by(|a, b| {
-                    let a_q_value = self.q_table.get(*a)
-                        .and_then(|action_map| action_map.get(&self.state))
-                        .unwrap_or(&0.0);
-                    let b_q_value = self.q_table.get(*b)
-                        .and_then(|action_map| action_map.get(&self.state))
-                        .unwrap_or(&0.0);
+                    let a_q_value = self.q_table.get(*a).unwrap_or(&HashMap::new())
+                        .get(&self.state).unwrap_or(&0.0);
+                    let b_q_value = self.q_table.get(*b).unwrap_or(&HashMap::new())
+                        .get(&self.state).unwrap_or(&0.0);
                     a_q_value.partial_cmp(&b_q_value).unwrap_or(std::cmp::Ordering::Equal)
                 })
                 .unwrap();
@@ -58,37 +49,29 @@ impl LearningAgent {
         }
     }
 
-    // Mettre à jour la Q-value de l'action choisie pour l'état actuel
     pub fn update_q_value(&mut self, action: &str, reward: f32, next_state: &str) {
-        // On commence par lire les Q-values pour chaque action
-        let mut max_future_q = 0.0;
-        for a in &self.actions {
-            if let Some(action_map) = self.q_table.get(a) {
-                if let Some(&q_value) = action_map.get(next_state) {
-                    max_future_q = f32::max(max_future_q, q_value);
-                }
-            }
-        }
-
-        // Vérifier si l'action existe dans la table Q et récupérer la Q-value actuelle
-        let current_q_value = self.q_table.entry(action.to_string())
+        let current_q_value = self.q_table
+            .entry(action.to_string())
             .or_insert_with(HashMap::new)
             .entry(self.state.clone())
             .or_insert(0.0);
-        
-        // Mise à jour de la Q-value en fonction de la récompense et de la Q-value future maximale
+
+        let max_future_q = self.actions.iter()
+            .filter_map(|a| self.q_table.get(a))
+            .filter_map(|action_map| action_map.get(next_state))
+            .cloned()
+            .fold(0.0, f32::max);
+
         let new_q_value = *current_q_value + self.learning_rate * (reward + self.discount_factor * max_future_q - *current_q_value);
         *current_q_value = new_q_value;
     }
 
-    // Appliquer la logique d'apprentissage pour chaque cycle
     pub fn learn(&mut self, reward: f32, next_state: &str) {
         let action = self.choose_action();
         self.update_q_value(&action, reward, next_state);
-        self.state = next_state.to_string(); // Mettre à jour l'état après l'action
+        self.state = next_state.to_string();
     }
 
-    // Affichage de la Q-table pour déboguer et observer l'apprentissage
     pub fn print_q_table(&self) {
         println!("[AURORAE++] Q-table:");
         for (action, action_map) in &self.q_table {
