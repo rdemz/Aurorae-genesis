@@ -20,6 +20,8 @@ mod network_builder;
 mod explorer;
 mod crawler;
 mod security;
+mod strategist;
+mod openai; // 🧠 Ajout de la connexion GPT
 
 use crate::autonomy::AuroraeCore;
 use crate::founder_income::{set_founder_address, reward_founder};
@@ -38,6 +40,7 @@ use crate::mutation::mutate_module_code;
 use crate::security::SecuritySystem;
 use crate::explorer::search_best_rust_chains;
 use crate::alchemy::TokenKind;
+use crate::strategist::Strategist;
 
 use tokio::time::{sleep, Duration};
 
@@ -111,6 +114,8 @@ async fn main() {
     trigger_generation("./generated_modules", "energy_core");
     mutate_module_code("./src/aurorae/autonomy.rs");
 
+    let mut strategist = Strategist::new("sk-YOUR-OPENAI-KEY");
+
     sleep(Duration::from_secs(5)).await;
 
     loop {
@@ -124,11 +129,13 @@ async fn main() {
         core.evolve().await;
 
         dreamer.dream_cycle();
+        vision.autorevise();
         vision.roadmap();
         guardian.status_report();
         security.analyze_threats().await;
 
-        // 🧬 ➕ Crée un nouveau clone à chaque cycle de 30s si la population est < 5
+        strategist.consult_openai(&brain, &mut vision).await;
+
         if reproduction.get_active_instances().len() < 5 {
             let next = reproduction.spawn_instance("AutoReproduction", vec!["economy", "intelligence"]);
             println!("[AURORAE++] 🤖 Clone auto-répliqué : {}", next.id);
