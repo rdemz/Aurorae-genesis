@@ -29,6 +29,7 @@ cargo_metadata = "0.18"
 ring = "0.17"
 flate2 = "1.0"
 tar = "0.4"
+regex = "1"
 
 # 🧠 INTELLIGENCE STRATÉGIQUE
 async-openai = "0.14" 
