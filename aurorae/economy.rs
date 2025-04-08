@@ -1,7 +1,7 @@
-//! economy.rs — Module économique vivant de AURORAE++
+//! economy.rs — Moteur économique vivant de AURORAE++
 
 use chrono::Utc;
-use rand::Rng; // ✅ Ajout pour .gen()
+use rand::Rng;
 use crate::founder_income::reward_founder;
 use crate::alchemy::{AlchemyEngine, TokenKind};
 
@@ -47,7 +47,10 @@ impl EconomyEngine {
         self.total_generated += value_created;
         self.cycles.push(cycle);
 
-        println!("[AURORAE++] 🌐 TOTAL GÉNÉRÉ : {:.4} tokens", self.total_generated);
+        println!(
+            "[AURORAE++] 🌐 TOTAL GÉNÉRÉ : {:.4} tokens",
+            self.total_generated
+        );
         println!(
             "→ Cycle {} • {:.0} tokens créés • {:.2} au fondateur",
             self.cycles.len(),
@@ -62,7 +65,7 @@ impl EconomyEngine {
 
     pub fn simulate_dynamic_rate(&self) -> f64 {
         let mut rng = rand::thread_rng();
-        let rate = 0.01 + (rng.gen::<f64>() * 0.03); // ✅ Correction ici
+        let rate = 0.01 + (rng.gen::<f64>() * 0.03);
         rate
     }
 
@@ -79,5 +82,29 @@ impl EconomyEngine {
 
     pub fn adjust_founder_share(&mut self, pct: f64) {
         self.founder_percentage = pct.clamp(0.0, 1.0);
+    }
+
+    // ✅ Méthodes manquantes
+    pub fn initialize(&mut self) {
+        println!("[AURORAE++] 🔧 Initialisation économique");
+    }
+
+    pub fn innovate(&mut self) {
+        println!("[AURORAE++] 🚀 Innovation économique");
+    }
+
+    pub fn financial_report(&self) {
+        println!(
+            "[AURORAE++] 📊 Rapport financier total : {:.2} tokens générés",
+            self.total_generated
+        );
+    }
+
+    pub fn get_total_value(&self) -> f64 {
+        self.total_generated
+    }
+
+    pub fn add_funds(&mut self, amount: f64) {
+        self.total_generated += amount;
     }
 }
