@@ -1,10 +1,22 @@
-use aurorae_lib::{
-    autonomy::AuroraeCore,
-    guardian::ModuleStatus,
-};
-
 use tokio::time::{sleep, Duration};
 use rand::Rng;
+
+mod guardian;
+mod economy;
+mod dream;
+mod alchemy;
+mod deployer;
+mod nft_minter;
+mod autonomy;
+mod validator;
+mod founder_income;
+mod blockchain_core;
+mod evolution;
+mod intelligence;
+mod security;
+
+use autonomy::AuroraeCore;
+use guardian::ModuleStatus;
 
 #[tokio::main]
 async fn main() {
@@ -45,9 +57,9 @@ async fn main() {
         if i > 1 {
             // Faire évoluer les réseaux existants
             let networks = core.get_network_names();
-            for network in networks {
+            for network in &networks {
                 if rand::thread_rng().gen_bool(0.5) {
-                    core.evolve_network(&network).await.ok();
+                    core.evolve_network(network).await.ok();
                 }
             }
             
@@ -75,7 +87,7 @@ async fn main() {
             core.security.analyze_threats().await;
             
             // Auto-amélioration par génération de code
-            core.evolution.generate_new_capabilities().await;
+            core.evolution.generate_new_capabilities().await.ok();
         }
         
         // Dans le dernier cycle, démontrer une pleine autonomie
