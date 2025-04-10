@@ -3,8 +3,8 @@
 # IA auto-améliorante pour la gestion autonome de crypto-monnaie
 # =====================================================
 
-# Utilisation d'une image Rust officielle récente comme base
-FROM rust:1.73-bullseye as builder
+# Utilisation d'une image Rust 1.75.0 ou plus récente comme base
+FROM rust:1.75-bullseye as builder
 
 # Installation des dépendances système nécessaires
 RUN apt-get update && apt-get install -y \
