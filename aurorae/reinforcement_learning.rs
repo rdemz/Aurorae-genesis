@@ -1,10 +1,25 @@
 use std::collections::{HashMap, HashSet};
 use rand::Rng;
 use std::time::Duration;
-// Supprimé les imports inutilisés: Instant, Arc, Mutex
 use serde::{Serialize, Deserialize};
+use std::path::Path;
 
-// Fonction utilitaire pour obtenir le temps courant
+// ====================== CONSTANTES & CONFIGURATION ======================
+
+/// Configuration par défaut pour l'agent d'apprentissage
+const DEFAULT_LEARNING_RATE: f32 = 0.1;
+const DEFAULT_DISCOUNT_FACTOR: f32 = 0.9;
+const DEFAULT_EXPLORATION_RATE: f32 = 0.1;
+const DEFAULT_ADAPTATION_THRESHOLD: f32 = 0.2;
+const DEFAULT_EVOLUTION_THRESHOLD: f32 = 0.5;
+const DEFAULT_META_LEARNING_RATE: f32 = 0.01;
+
+/// Chemin vers le dossier d'inspiration pour de nouvelles stratégies
+const INSPIRATION_PATH: &str = "C:\\Users\\admin\\inspiration";
+
+// ====================== UTILITAIRES ======================
+
+/// Obtient le temps actuel en secondes depuis l'époque UNIX
 fn get_current_time() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -12,7 +27,31 @@ fn get_current_time() -> u64 {
         .as_secs()
 }
 
-// Définition de la structure de mémoire à long terme, permettant à l'agent de "rêver"
+/// Charge des inspirations depuis le dossier spécifié
+fn load_inspirations() -> Vec<String> {
+    let mut inspirations = Vec::new();
+    
+    let inspiration_path = Path::new(INSPIRATION_PATH);
+    if inspiration_path.exists() && inspiration_path.is_dir() {
+        if let Ok(entries) = std::fs::read_dir(inspiration_path) {
+            for entry in entries.filter_map(Result::ok) {
+                if let Ok(file_type) = entry.file_type() {
+                    if file_type.is_file() {
+                        if let Ok(content) = std::fs::read_to_string(entry.path()) {
+                            inspirations.push(content);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    inspirations
+}
+
+// ====================== DÉFINITION DES STRUCTURES DE DONNÉES ======================
+
+/// Structure représentant un épisode de mémoire pour l'apprentissage à long terme
 #[derive(Clone, Serialize, Deserialize)]
 pub struct EpisodeMemory {
     pub state_history: Vec<String>,
@@ -23,7 +62,40 @@ pub struct EpisodeMemory {
     pub performance_score: f32,
 }
 
-// Structure représentant une stratégie que l'agent peut développer
+impl EpisodeMemory {
+    /// Crée un nouvel épisode de mémoire avec un état initial
+    pub fn new(initial_state: &str) -> Self {
+        Self {
+            state_history: vec![initial_state.to_string()],
+            action_history: Vec::new(),
+            reward_history: Vec::new(),
+            total_reward: 0.0,
+            timestamp: get_current_time(),
+            performance_score: 0.0,
+        }
+    }
+    
+    /// Ajoute une transition (action, récompense, nouvel état) à l'épisode
+    pub fn add_transition(&mut self, action: &str, reward: f32, next_state: &str) {
+        self.action_history.push(action.to_string());
+        self.reward_history.push(reward);
+        self.state_history.push(next_state.to_string());
+        self.total_reward += reward;
+    }
+    
+    /// Calcule le score de performance de l'épisode
+    pub fn calculate_performance(&mut self) -> f32 {
+        if self.reward_history.is_empty() {
+            self.performance_score = 0.0;
+        } else {
+            self.performance_score = self.total_reward / self.reward_history.len() as f32;
+        }
+        
+        self.performance_score
+    }
+}
+
+/// Structure représentant une stratégie développée par l'agent
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Strategy {
     pub name: String,
@@ -34,7 +106,101 @@ pub struct Strategy {
     pub creation_context: String,
 }
 
-// Structure principale de l'agent avec capacités étendues
+impl Strategy {
+    /// Crée une nouvelle stratégie
+    pub fn new(name: &str, state_action_map: HashMap<String, String>, context: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            state_action_map,
+            effectiveness: 0.5, // Valeur initiale moyenne
+            usage_count: 0,
+            last_updated: get_current_time(),
+            creation_context: context.to_string(),
+        }
+    }
+    
+    /// Met à jour l'efficacité de la stratégie en fonction des résultats
+    pub fn update_effectiveness(&mut self, success_rate: f32) {
+        // Mise à jour progressive de l'efficacité (moyenne mobile)
+        self.effectiveness = self.effectiveness * 0.9 + success_rate * 0.1;
+        self.last_updated = get_current_time();
+    }
+    
+    /// Crée une stratégie mutée à partir de celle-ci
+    pub fn create_mutation(&self, name: &str, mutation_rate: f32, available_actions: &[String]) -> Self {
+        let mut rng = rand::thread_rng();
+        let mut new_map = self.state_action_map.clone();
+        
+        // Calculer le nombre de mutations à effectuer
+        let num_mutations = (new_map.len() as f32 * mutation_rate).round() as usize;
+        let states: Vec<String> = new_map.keys().cloned().collect();
+        
+        // Appliquer des mutations aléatoires
+        for _ in 0..num_mutations {
+            if states.is_empty() || available_actions.is_empty() {
+                break;
+            }
+            
+            // Sélectionner un état aléatoire pour mutation
+            let state_index = rng.gen_range(0..states.len());
+            let state = &states[state_index];
+            
+            // Sélectionner une action différente
+            if let Some(current_action) = new_map.get(state) {
+                let alternative_actions: Vec<String> = available_actions.iter()
+                    .filter(|&a| a != current_action)
+                    .cloned()
+                    .collect();
+                
+                if !alternative_actions.is_empty() {
+                    let new_action = &alternative_actions[rng.gen_range(0..alternative_actions.len())];
+                    new_map.insert(state.clone(), new_action.clone());
+                }
+            }
+        }
+        
+        Strategy {
+            name: name.to_string(),
+            state_action_map: new_map,
+            effectiveness: self.effectiveness * 0.8, // Efficacité initiale réduite pour la nouvelle mutation
+            usage_count: 0,
+            last_updated: get_current_time(),
+            creation_context: format!(
+                "Mutation de {} avec {} changements ", 
+                self.name, 
+                num_mutations
+            ),
+        }
+    }
+}
+
+/// Configuration pour l'initialisation de l'agent d'apprentissage
+#[derive(Clone, Serialize, Deserialize)]
+pub struct AgentConfig {
+    pub learning_rate: f32,
+    pub discount_factor: f32,
+    pub exploration_rate: f32,
+    pub adaptation_threshold: f32,
+    pub evolution_threshold: f32,
+    pub meta_learning_rate: f32,
+}
+
+impl Default for AgentConfig {
+    fn default() -> Self {
+        Self {
+            learning_rate: DEFAULT_LEARNING_RATE,
+            discount_factor: DEFAULT_DISCOUNT_FACTOR,
+            exploration_rate: DEFAULT_EXPLORATION_RATE,
+            adaptation_threshold: DEFAULT_ADAPTATION_THRESHOLD,
+            evolution_threshold: DEFAULT_EVOLUTION_THRESHOLD,
+            meta_learning_rate: DEFAULT_META_LEARNING_RATE,
+        }
+    }
+}
+
+// ====================== AGENT D'APPRENTISSAGE ======================
+
+/// Structure principale de l'agent avec capacités étendues
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LearningAgent {
     pub actions: Vec<String>,                         // Actions disponibles
@@ -60,6 +226,7 @@ pub struct LearningAgent {
 }
 
 impl LearningAgent {
+    /// Crée un nouvel agent d'apprentissage avec la configuration par défaut
     pub fn new(actions: Vec<String>, initial_state: &str) -> Self {
         let mut q_table = HashMap::new();
         for action in &actions {
@@ -77,9 +244,9 @@ impl LearningAgent {
             actions: actions.clone(),
             state: initial_state.to_string(),
             q_table,
-            learning_rate: 0.1,
-            discount_factor: 0.9,
-            exploration_rate: 0.1,
+            learning_rate: DEFAULT_LEARNING_RATE,
+            discount_factor: DEFAULT_DISCOUNT_FACTOR,
+            exploration_rate: DEFAULT_EXPLORATION_RATE,
             
             // Initialisation des nouvelles propriétés
             long_term_memory: Vec::new(),
@@ -89,22 +256,32 @@ impl LearningAgent {
             known_states,
             creation_timestamp: current_time,
             last_evolution_timestamp: current_time,
-            adaptation_threshold: 0.2,
-            evolution_threshold: 0.5,
-            meta_learning_rate: 0.01,
-            current_episode: EpisodeMemory {
-                state_history: vec![initial_state.to_string()],
-                action_history: Vec::new(),
-                reward_history: Vec::new(),
-                total_reward: 0.0,
-                timestamp: current_time,
-                performance_score: 0.0,
-            },
+            adaptation_threshold: DEFAULT_ADAPTATION_THRESHOLD,
+            evolution_threshold: DEFAULT_EVOLUTION_THRESHOLD,
+            meta_learning_rate: DEFAULT_META_LEARNING_RATE,
+            current_episode: EpisodeMemory::new(initial_state),
             network_complexity: 1,
         }
     }
 
-    // Fonction originale améliorée pour choisir une action
+    /// Crée un agent avec une configuration personnalisée
+    pub fn with_config(actions: Vec<String>, initial_state: &str, config: AgentConfig) -> Self {
+        let mut agent = Self::new(actions, initial_state);
+        
+        // Appliquer la configuration
+        agent.learning_rate = config.learning_rate;
+        agent.discount_factor = config.discount_factor;
+        agent.exploration_rate = config.exploration_rate;
+        agent.adaptation_threshold = config.adaptation_threshold;
+        agent.evolution_threshold = config.evolution_threshold;
+        agent.meta_learning_rate = config.meta_learning_rate;
+        
+        agent
+    }
+
+    // ====================== MÉTHODES DE SÉLECTION D'ACTION ======================
+    
+    /// Choisit une action en fonction de l'état actuel
     pub fn choose_action(&mut self) -> String {
         let mut rng = rand::thread_rng();
 
@@ -125,24 +302,36 @@ impl LearningAgent {
 
         // Exploration vs exploitation (logique originale améliorée)
         if rng.gen::<f32>() < self.exploration_rate {
-            let action = &self.actions[rng.gen_range(0..self.actions.len())];
-            action.to_string()
+            self.choose_exploration_action()
         } else {
-            // Exploitation mais avec biais pour favoriser les actions moins utilisées parmi les meilleures
-            let best_actions = self.find_top_actions(3); // Top 3 actions
-            
-            if !best_actions.is_empty() {
-                let chosen_index = rng.gen_range(0..best_actions.len());
-                best_actions[chosen_index].clone()
-            } else {
-                // Fallback au cas où
-                let action = &self.actions[rng.gen_range(0..self.actions.len())];
-                action.to_string()
-            }
+            self.choose_exploitation_action()
+        }
+    }
+    
+    /// Choisit une action d'exploration (aléatoire)
+    fn choose_exploration_action(&self) -> String {
+        let mut rng = rand::thread_rng();
+        let action = &self.actions[rng.gen_range(0..self.actions.len())];
+        action.to_string()
+    }
+    
+    /// Choisit une action d'exploitation (basée sur la meilleure valeur Q)
+    fn choose_exploitation_action(&self) -> String {
+        let mut rng = rand::thread_rng();
+        
+        // Exploitation mais avec biais pour favoriser les actions moins utilisées parmi les meilleures
+        let best_actions = self.find_top_actions(3); // Top 3 actions
+        
+        if !best_actions.is_empty() {
+            let chosen_index = rng.gen_range(0..best_actions.len());
+            best_actions[chosen_index].clone()
+        } else {
+            // Fallback au cas où
+            self.choose_exploration_action()
         }
     }
 
-    // Méthode pour trouver les meilleures actions pour un état
+    /// Trouve les meilleures actions pour l'état actuel
     fn find_top_actions(&self, n: usize) -> Vec<String> {
         let mut action_values: Vec<(String, f32)> = self.actions.iter()
             .filter_map(|action| {
@@ -168,7 +357,9 @@ impl LearningAgent {
             .collect()
     }
 
-    // Fonction update_q_value avec la correction du borrowing
+    // ====================== MÉTHODES D'APPRENTISSAGE ======================
+
+    /// Met à jour la valeur Q pour une paire état-action
     pub fn update_q_value(&mut self, action: &str, reward: f32, next_state: &str) {
         // Ajouter l'état à notre liste d'états connus s'il est nouveau
         if !self.known_states.contains(next_state) {
@@ -217,15 +408,12 @@ impl LearningAgent {
         *current_q_value = new_q_value;
     }
 
-    // Fonction d'apprentissage améliorée qui enregistre l'historique
+    /// Fonction d'apprentissage principale
     pub fn learn(&mut self, reward: f32, next_state: &str) {
         let action = self.choose_action();
         
         // Mettre à jour la mémoire de l'épisode en cours
-        self.current_episode.state_history.push(self.state.clone());
-        self.current_episode.action_history.push(action.clone());
-        self.current_episode.reward_history.push(reward);
-        self.current_episode.total_reward += reward;
+        self.current_episode.add_transition(&action, reward, next_state);
         
         // Mettre à jour la Q-table
         self.update_q_value(&action, reward, next_state);
@@ -237,7 +425,9 @@ impl LearningAgent {
         self.check_for_adaptation();
     }
 
-    // Nouvelle fonction : Évaluer les performances actuelles
+    // ====================== MÉTHODES D'ÉVALUATION ET D'ADAPTATION ======================
+
+    /// Évalue les performances actuelles de l'agent
     pub fn evaluate_performance(&mut self) -> f32 {
         // Calculer la performance basée sur diverses métriques
         
@@ -286,10 +476,8 @@ impl LearningAgent {
         performance
     }
 
-    // Nouvelle fonction : Archiver l'épisode actuel dans la mémoire à long terme
+    /// Archive l'épisode actuel dans la mémoire à long terme
     fn archive_current_episode(&mut self) {
-        let current_time = get_current_time();
-        
         // Créer une copie de l'épisode actuel
         let episode_to_archive = self.current_episode.clone();
         
@@ -307,17 +495,10 @@ impl LearningAgent {
         }
         
         // Réinitialiser l'épisode courant
-        self.current_episode = EpisodeMemory {
-            state_history: vec![self.state.clone()],
-            action_history: Vec::new(),
-            reward_history: Vec::new(),
-            total_reward: 0.0,
-            timestamp: current_time,
-            performance_score: 0.0,
-        };
+        self.current_episode = EpisodeMemory::new(&self.state);
     }
 
-    // Nouvelle fonction : Vérifier s'il faut s'adapter ou évoluer
+    /// Vérifie s'il faut s'adapter ou évoluer
     fn check_for_adaptation(&mut self) {
         // Évaluer les performances actuelles
         let performance = self.evaluate_performance();
@@ -349,7 +530,7 @@ impl LearningAgent {
         }
     }
 
-    // Nouvelle fonction : Adapter les hyperparamètres en fonction des performances
+    /// Adapte les hyperparamètres en fonction des performances
     fn adapt_parameters(&mut self) {
         let mut rng = rand::thread_rng();
         
@@ -375,7 +556,9 @@ impl LearningAgent {
                  self.exploration_rate, self.learning_rate);
     }
 
-    // Nouvelle fonction : Évoluer le réseau neural (augmenter sa complexité)
+    // ====================== MÉTHODES D'ÉVOLUTION ======================
+
+    /// Fait évoluer le réseau neural (augmente sa complexité)
     pub fn evolve_network(&mut self) {
         self.network_complexity += 1;
         self.evolution_count += 1;
@@ -398,7 +581,7 @@ impl LearningAgent {
         self.explore_new_actions();
     }
 
-    // Nouvelle fonction : Explorer de nouvelles actions potentielles
+    /// Explore de nouvelles actions potentielles
     pub fn explore_new_actions(&mut self) {
         // Simuler la découverte de nouvelles actions possibles
         let mut new_actions = Vec::new();
@@ -424,7 +607,7 @@ impl LearningAgent {
         println!("[AURORAE++] {} nouvelles actions découvertes", new_actions.len());
     }
 
-    // Nouvelle fonction : Ajouter une nouvelle action à la Q-table
+    /// Ajoute une nouvelle action à la Q-table
     pub fn add_new_action_to_q_table(&mut self, action: &str) {
         // Vérifier si l'action existe déjà
         if self.actions.contains(&action.to_string()) {
@@ -446,16 +629,24 @@ impl LearningAgent {
         println!("[AURORAE++] Nouvelle action ajoutée : {}", action);
     }
 
-    // Nouvelle fonction : Générer une stratégie basée sur l'apprentissage actuel
+    // ====================== MÉTHODES DE GESTION DES STRATÉGIES ======================
+
+    /// Génère une stratégie basée sur l'apprentissage actuel
     pub fn generate_strategy(&mut self) {
-        let current_time = get_current_time();
-        
         // Construire une stratégie à partir des meilleures actions pour chaque état connu
         let mut state_action_map = HashMap::new();
         
         for state in &self.known_states {
+            // Temporairement définir l'état actuel pour trouver les meilleures actions
+            let original_state = self.state.clone();
+            self.state = state.clone();
+            
             // Trouver la meilleure action pour cet état
             let best_actions = self.find_top_actions(1);
+            
+            // Restaurer l'état original
+            self.state = original_state;
+            
             if !best_actions.is_empty() {
                 state_action_map.insert(state.clone(), best_actions[0].clone());
             }
@@ -463,15 +654,20 @@ impl LearningAgent {
         
         // Ne créer la stratégie que si elle a un nombre minimum d'états
         if state_action_map.len() >= 10 {
-            let strategy = Strategy {
-                name: format!("strategy_{}", self.strategies.len() + 1),
-                state_action_map,
-                effectiveness: 0.5, // Commencer avec une efficacité moyenne
-                usage_count: 0,
-                last_updated: current_time,
-                creation_context: format!("Evolution #{}, Performance {:.2}", 
-                    self.evolution_count, self.current_episode.performance_score),
+            // Tenter d'obtenir des inspirations externes
+            let inspirations = load_inspirations();
+            let context = if !inspirations.is_empty() && rand::thread_rng().gen::<f32>() < 0.3 {
+                // Sélectionner une inspiration aléatoire
+                let inspiration = &inspirations[rand::thread_rng().gen_range(0..inspirations.len())];
+                format!("Evolution #{}, Performance {:.2}, Inspiration externe", 
+                    self.evolution_count, self.current_episode.performance_score)
+            } else {
+                format!("Evolution #{}, Performance {:.2}", 
+                    self.evolution_count, self.current_episode.performance_score)
             };
+            
+            let strategy_name = format!("strategy_{}", self.strategies.len() + 1);
+            let strategy = Strategy::new(&strategy_name, state_action_map, &context);
             
             self.strategies.push(strategy);
             println!("[AURORAE++] Nouvelle stratégie générée : {}", 
@@ -479,7 +675,7 @@ impl LearningAgent {
         }
     }
 
-    // Nouvelle fonction : Explorer une nouvelle stratégie (variation de la meilleure actuelle)
+    /// Explore une nouvelle stratégie (variation de la meilleure actuelle)
     pub fn explore_new_strategy(&mut self) {
         if self.strategies.is_empty() {
             // Générer une première stratégie si aucune n'existe
@@ -498,62 +694,22 @@ impl LearningAgent {
             }
         }
         
-        // Cloner les informations nécessaires de la meilleure stratégie pour éviter les problèmes d'emprunt
-        let best_strategy_name = self.strategies[best_strategy_index].name.clone();
-        let best_strategy_effectiveness = self.strategies[best_strategy_index].effectiveness;
-        let best_strategy_state_action_map = self.strategies[best_strategy_index].state_action_map.clone();
+        // Cloner la meilleure stratégie pour éviter les problèmes d'emprunt
+        let best_strategy = self.strategies[best_strategy_index].clone();
         
-        // Créer une variation de cette stratégie
-        let mut new_state_action_map = best_strategy_state_action_map;
-        
-        // Modifier quelques états-actions aléatoires (10-30% de mutations)
-        let mut rng = rand::thread_rng();
-        let num_mutations = (new_state_action_map.len() as f32 * 
-            rng.gen_range(0.1..=0.3)).round() as usize;
-        
-        let states: Vec<String> = new_state_action_map.keys().cloned().collect();
-        for _ in 0..num_mutations {
-            if states.is_empty() {
-                break;
-            }
-            
-            // Sélectionner un état aléatoire
-            let state_index = rng.gen_range(0..states.len());
-            let state = &states[state_index];
-            
-            // Sélectionner une action aléatoire différente
-            if let Some(current_action) = new_state_action_map.get(state) {
-                let new_actions: Vec<String> = self.actions.iter()
-                    .filter(|a| a != &current_action)
-                    .cloned()
-                    .collect();
-                
-                if !new_actions.is_empty() {
-                    let new_action = &new_actions[rng.gen_range(0..new_actions.len())];
-                    new_state_action_map.insert(state.clone(), new_action.clone());
-                }
-            }
-        }
-        
-        let current_time = get_current_time();
-        
-        // Créer la nouvelle stratégie
-        let new_strategy = Strategy {
-            name: format!("strategy_{}_{}", best_strategy_name, self.strategies.len() + 1),
-            state_action_map: new_state_action_map,
-            effectiveness: best_strategy_effectiveness * 0.8, // Légèrement inférieure au départ
-            usage_count: 0,
-            last_updated: current_time,
-            creation_context: format!("Mutation de {} avec {} changements ", 
-                best_strategy_name, num_mutations),
-        };
+        // Créer une mutation de cette stratégie
+        let mutation_rate = rand::thread_rng().gen_range(0.1..=0.3);
+        let new_strategy_name = format!("strategy_{}_{}", best_strategy.name, self.strategies.len() + 1);
+        let new_strategy = best_strategy.create_mutation(&new_strategy_name, mutation_rate, &self.actions);
         
         // Ajouter la nouvelle stratégie à la liste
-        self.strategies.push(new_strategy);
-        println!("[AURORAE++] Stratégie mutée créée à partir de {}", best_strategy_name);
+        self.strategies.push(new_strategy.clone());
+        println!("[AURORAE++] Stratégie mutée créée à partir de {}", best_strategy.name);
     }
 
-    // Nouvelle fonction : Processus de "rêve" pour consolider l'apprentissage
+    // ====================== MÉTHODES DE CONSOLIDATION DE L'APPRENTISSAGE ======================
+
+    /// Processus de "rêve" pour consolider l'apprentissage
     pub fn dream(&mut self) {
         println!("[AURORAE++] Démarrage du cycle de rêve...");
         
@@ -602,7 +758,9 @@ impl LearningAgent {
         println!("[AURORAE++] Cycle de rêve terminé. {} épisodes rejoués.", num_episodes);
     }
 
-    // Affiche la table Q (inchangé mais avec formatage amélioré)
+    // ====================== MÉTHODES D'INTROSPECTION & EXPORT ======================
+
+    /// Affiche la table Q (inchangé mais avec formatage amélioré)
     pub fn print_q_table(&self) {
         println!("[AURORAE++] Table Q ({} états, {} actions):", 
                  self.known_states.len(), self.actions.len());
@@ -633,7 +791,7 @@ impl LearningAgent {
         }
     }
     
-    // Nouvelle fonction: Rapport de performance et d'état
+    /// Génère un rapport détaillé sur les performances de l'agent
     pub fn performance_report(&self) -> String {
         let mut report = String::new();
         
@@ -693,7 +851,9 @@ impl LearningAgent {
         report
     }
     
-    // Sauvegarder l'état de l'agent (sérialisé)
+    // ====================== MÉTHODES DE PERSISTANCE ======================
+    
+    /// Sauvegarde l'état de l'agent dans un fichier
     pub fn save_to_file(&self, path: &str) -> std::io::Result<()> {
         let json = serde_json::to_string_pretty(self)?;
         std::fs::write(path, json)?;
@@ -701,11 +861,73 @@ impl LearningAgent {
         Ok(())
     }
     
-    // Charger l'état de l'agent
+    /// Charge l'état de l'agent depuis un fichier
     pub fn load_from_file(path: &str) -> std::io::Result<Self> {
         let json = std::fs::read_to_string(path)?;
         let agent: LearningAgent = serde_json::from_str(&json)?;
         println!("[AURORAE++] Agent chargé depuis {}", path);
         Ok(agent)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_new_agent_initialization() {
+        let actions = vec!["a".to_string(), "b".to_string(), "c".to_string()];
+        let initial_state = "start";
+        let agent = LearningAgent::new(actions.clone(), initial_state);
+        
+        assert_eq!(agent.actions, actions);
+        assert_eq!(agent.state, initial_state);
+        assert_eq!(agent.known_states.len(), 1);
+        assert!(agent.known_states.contains(initial_state));
+    }
+    
+    #[test]
+    fn test_episode_memory() {
+        let mut episode = EpisodeMemory::new("start");
+        
+        // Vérifier l'initialisation
+        assert_eq!(episode.state_history, vec!["start"]);
+        assert!(episode.action_history.is_empty());
+        assert!(episode.reward_history.is_empty());
+        
+        // Ajouter une transition
+        episode.add_transition("action1", 1.0, "state2");
+        
+        // Vérifier que la transition a été correctement ajoutée
+        assert_eq!(episode.state_history, vec!["start", "state2"]);
+        assert_eq!(episode.action_history, vec!["action1"]);
+        assert_eq!(episode.reward_history, vec![1.0]);
+        assert_eq!(episode.total_reward, 1.0);
+        
+        // Calculer la performance
+        let perf = episode.calculate_performance();
+        assert_eq!(perf, 1.0);
+    }
+    
+    #[test]
+    fn test_strategy_mutation() {
+        let mut state_action_map = HashMap::new();
+        state_action_map.insert("state1".to_string(), "action1".to_string());
+        state_action_map.insert("state2".to_string(), "action2".to_string());
+        
+        let strategy = Strategy::new("test_strategy", state_action_map, "context");
+        
+        let available_actions = vec![
+            "action1".to_string(),
+            "action2".to_string(),
+            "action3".to_string(),
+        ];
+        
+        let mutated = strategy.create_mutation("mutation", 1.0, &available_actions);
+        
+        // Vérifier que la mutation a bien été effectuée
+        assert_eq!(mutated.name, "mutation");
+        assert_eq!(mutated.effectiveness, strategy.effectiveness * 0.8);
+        assert!(mutated.creation_context.contains("Mutation de"));
     }
 }
