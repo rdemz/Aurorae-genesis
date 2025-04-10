@@ -512,7 +512,13 @@ impl LearningAgent {
         }
         
         // Créer une variation de cette stratégie
-        let best_strategy = &self.strategies[best_strategy_index];
+        // Récupérer la meilleure stratégie de manière immuable
+let best_strategy = &self.strategies[best_strategy_index];
+
+// Maintenant, ajouter la nouvelle stratégie de manière mutable
+self.strategies.push(new_strategy);
+
+// Utiliser la meilleure stratégie après avoir effectué l'emprunt mutable
         let mut new_state_action_map = best_strategy.state_action_map.clone();
         
         // Modifier quelques états-actions aléatoires (10-30% de mutations)
