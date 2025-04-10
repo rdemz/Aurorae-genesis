@@ -107,6 +107,14 @@ impl LearningAgent {
         if !self.strategies.is_empty() && rng.gen::<f32>() < 0.2 {
             let strategy_index = rng.gen_range(0..self.strategies.len());
             if let Some(action) = self.strategies[strategy_index].state_action_map.get(&self.state) {
+    // Emprunt immuable pour récupérer l'action
+    let action_to_return = action.clone();
+    
+    // Emprunt mutable pour mettre à jour usage_count
+    self.strategies[strategy_index].usage_count += 1;
+
+    // Retourner l'action clonée
+    return action_to_return;
                 // Utilisation d'une stratégie connue pour cet état
                 self.strategies[strategy_index].usage_count += 1;
                 return action.clone();
