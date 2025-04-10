@@ -5,7 +5,7 @@
 # ==========================================================================
 
 # Stage 1: Builder avec Rust 1.85
-FROM rust:1.85-bullseye as builder
+FROM rust:1.85-bullseye AS builder
 
 LABEL maintainer="rdemz"
 LABEL description="Aurorae - IA autonome pour crypto-économie avec capacités meta-cognitives"
@@ -24,18 +24,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-dev \
     libclang-dev \
-    libtorch-dev \
     libopenblas-dev \
     liblapack-dev \
     libhdf5-dev \
     libffi-dev \
-    libopencv-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Installation de Node.js pour les composants TypeScript et frameworks neuromorphiques
+# Installation de Node.js pour les composants TypeScript
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g typescript @neuromorphic/simulator
+    && npm install -g typescript
 
 # Installation des bibliothèques Python avancées pour les capacités meta-cognitives
 RUN pip3 install --no-cache-dir \
@@ -47,18 +45,16 @@ RUN pip3 install --no-cache-dir \
     pandas \
     scikit-learn \
     transformers \
-    ray[rllib] \
+    "ray[rllib]" \
     networkx \
     pymc \
     sympy \
     jax \
-    flax \
-    formal-verification \
-    neurocognitive-simulator
+    flax
 
 # Configuration CUDA pour l'accélération GPU (si disponible)
 ENV PATH=/usr/local/cuda/bin:${PATH}
-ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-""}
 
 # Configurer le répertoire de travail
 WORKDIR /app
@@ -106,15 +102,15 @@ RUN pip3 install --no-cache-dir \
     torch \
     tensorflow-cpu \
     numpy \
-    ray[rllib] \
-    formal-verification \
-    neurocognitive-simulator
+    "ray[rllib]" \
+    sympy \
+    scipy \
+    networkx
 
 # Installation de Node.js pour les composants TypeScript
 RUN apt-get update && apt-get install -y curl gnupg && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
-    npm install -g @neuromorphic/runtime && \
     apt-get purge -y curl gnupg && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
