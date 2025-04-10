@@ -588,7 +588,26 @@ self.strategies.push(new_strategy);
                     .unwrap_or(std::cmp::Ordering::Equal));
             
             let episode_index = (rng.gen::<f32>().powi(2) * self.long_term_memory.len() as f32) as usize;
-            let episode = &self.long_term_memory[episode_index.min(self.long_term_memory.len() - 1)];
+            // Récupérer un épisode de manière immuable
+let episode = &self.long_term_memory[episode_index.min(self.long_term_memory.len() - 1)];
+
+// Utiliser l'épisode pour mettre à jour la Q-table
+for i in 0..(episode.action_history.len().min(episode.state_history.len() - 1)) {
+    let state = &episode.state_history[i];
+    let action = &episode.action_history[i];
+    let reward = episode.reward_history[i];
+    let next_state = &episode.state_history[i + 1];
+
+    // Modifier légèrement la récompense pour explorer des variations
+    let dream_reward = if rng.gen::<f32>() < 0.2 {
+        reward * rng.gen_range(0.8..1.2)
+    } else {
+        reward
+    };
+
+    // Mettre à jour la Q-table après avoir terminé avec l'emprunt immuable
+    self.update_q_value(action, dream_reward, next_state);
+}
             
             // "Rejouer" cet épisode avec des variations pour renforcer l'apprentissage
             for i in 0..(episode.action_history.len().min(episode.state_history.len() - 1)) {
