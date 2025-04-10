@@ -481,7 +481,17 @@ impl LearningAgent {
                 state_action_map,
                 effectiveness: 0.5, // Commencer avec une efficacité moyenne
                 usage_count: 0,
-                last_updated: current_time,
+                // Obtenir l'heure actuelle
+let current_time = std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .unwrap_or(std::time::Duration::from_secs(0))
+    .as_secs();
+
+// Calculer le nombre de mutations sur la stratégie
+let num_mutations = (new_state_action_map.len() as f32 * rng.gen_range(0.1..=0.3)).round() as usize;
+
+last_updated: current_time," // Reinsert corrected `current_time`
+creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
                 creation_context: format!("Evolution #{}, Performance {:.2}", 
                     self.evolution_count, self.current_episode.performance_score),
             };
@@ -522,7 +532,17 @@ let new_strategy = Strategy {
     state_action_map: best_strategy.state_action_map.clone(),
     effectiveness: best_strategy.effectiveness * 0.8,  // Exemple de mutation
     usage_count: 0,
-    last_updated: current_time,
+    // Obtenir l'heure actuelle
+let current_time = std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .unwrap_or(std::time::Duration::from_secs(0))
+    .as_secs();
+
+// Calculer le nombre de mutations sur la stratégie
+let num_mutations = (new_state_action_map.len() as f32 * rng.gen_range(0.1..=0.3)).round() as usize;
+
+last_updated: current_time," // Reinsert corrected `current_time`
+creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
     creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
 };
 
@@ -571,7 +591,17 @@ self.strategies.push(new_strategy);
             state_action_map: new_state_action_map,
             effectiveness: best_strategy.effectiveness * 0.8, // Légèrement inférieure au départ
             usage_count: 0,
-            last_updated: current_time,
+            // Obtenir l'heure actuelle
+let current_time = std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .unwrap_or(std::time::Duration::from_secs(0))
+    .as_secs();
+
+// Calculer le nombre de mutations sur la stratégie
+let num_mutations = (new_state_action_map.len() as f32 * rng.gen_range(0.1..=0.3)).round() as usize;
+
+last_updated: current_time," // Reinsert corrected `current_time`
+creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
             creation_context: format!("Mutation de {} avec {} changements", 
                 best_strategy.name, num_mutations),
         };
@@ -582,7 +612,17 @@ let new_strategy = Strategy {
     state_action_map: best_strategy.state_action_map.clone(),
     effectiveness: best_strategy.effectiveness * 0.8,  // Exemple de mutation
     usage_count: 0,
-    last_updated: current_time,
+    // Obtenir l'heure actuelle
+let current_time = std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .unwrap_or(std::time::Duration::from_secs(0))
+    .as_secs();
+
+// Calculer le nombre de mutations sur la stratégie
+let num_mutations = (new_state_action_map.len() as f32 * rng.gen_range(0.1..=0.3)).round() as usize;
+
+last_updated: current_time," // Reinsert corrected `current_time`
+creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
     creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
 };
 
