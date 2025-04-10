@@ -1,8 +1,16 @@
 use std::collections::{HashMap, HashSet};
 use rand::Rng;
-use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex};
+use std::time::Duration;
+// Supprimé les imports inutilisés: Instant, Arc, Mutex
 use serde::{Serialize, Deserialize};
+
+// Fonction utilitaire pour obtenir le temps courant
+fn get_current_time() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or(Duration::from_secs(0))
+        .as_secs()
+}
 
 // Définition de la structure de mémoire à long terme, permettant à l'agent de "rêver"
 #[derive(Clone, Serialize, Deserialize)]
@@ -60,10 +68,7 @@ impl LearningAgent {
             q_table.insert(action.clone(), action_map);
         }
         
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(Duration::from_secs(0))
-            .as_secs();
+        let current_time = get_current_time();
 
         let mut known_states = HashSet::new();
         known_states.insert(initial_state.to_string());
@@ -107,17 +112,14 @@ impl LearningAgent {
         if !self.strategies.is_empty() && rng.gen::<f32>() < 0.2 {
             let strategy_index = rng.gen_range(0..self.strategies.len());
             if let Some(action) = self.strategies[strategy_index].state_action_map.get(&self.state) {
-    // Emprunt immuable pour récupérer l'action
-    let action_to_return = action.clone();
-    
-    // Emprunt mutable pour mettre à jour usage_count
-    self.strategies[strategy_index].usage_count += 1;
-
-    // Retourner l'action clonée
-    return action_to_return;
-                // Utilisation d'une stratégie connue pour cet état
+                // Emprunt immuable pour récupérer l'action
+                let action_to_return = action.clone();
+                
+                // Emprunt mutable pour mettre à jour usage_count
                 self.strategies[strategy_index].usage_count += 1;
-                return action.clone();
+
+                // Retourner l'action clonée
+                return action_to_return;
             }
         }
 
@@ -271,10 +273,7 @@ impl LearningAgent {
                           strategy_score * 0.1;
         
         // Enregistrer la performance
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(Duration::from_secs(0))
-            .as_secs();
+        let current_time = get_current_time();
         
         self.performance_history.push((current_time, performance));
         self.current_episode.performance_score = performance;
@@ -289,10 +288,7 @@ impl LearningAgent {
 
     // Nouvelle fonction : Archiver l'épisode actuel dans la mémoire à long terme
     fn archive_current_episode(&mut self) {
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(Duration::from_secs(0))
-            .as_secs();
+        let current_time = get_current_time();
         
         // Créer une copie de l'épisode actuel
         let episode_to_archive = self.current_episode.clone();
@@ -326,10 +322,7 @@ impl LearningAgent {
         // Évaluer les performances actuelles
         let performance = self.evaluate_performance();
         
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(Duration::from_secs(0))
-            .as_secs();
+        let current_time = get_current_time();
         
         // Vérifier s'il est temps de s'adapter (toutes les 100 étapes)
         if self.current_episode.state_history.len() % 100 == 0 {
@@ -388,10 +381,7 @@ impl LearningAgent {
         self.evolution_count += 1;
         
         // Mettre à jour le timestamp d'évolution
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(Duration::from_secs(0))
-            .as_secs();
+        let current_time = get_current_time();
         self.last_evolution_timestamp = current_time;
         
         // Ajuster les seuils en fonction de la nouvelle complexité
@@ -458,10 +448,7 @@ impl LearningAgent {
 
     // Nouvelle fonction : Générer une stratégie basée sur l'apprentissage actuel
     pub fn generate_strategy(&mut self) {
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(Duration::from_secs(0))
-            .as_secs();
+        let current_time = get_current_time();
         
         // Construire une stratégie à partir des meilleures actions pour chaque état connu
         let mut state_action_map = HashMap::new();
@@ -481,17 +468,7 @@ impl LearningAgent {
                 state_action_map,
                 effectiveness: 0.5, // Commencer avec une efficacité moyenne
                 usage_count: 0,
-                // Obtenir l'heure actuelle
-let current_time = std::time::SystemTime::now()
-    .duration_since(std::time::UNIX_EPOCH)
-    .unwrap_or(std::time::Duration::from_secs(0))
-    .as_secs();
-
-// Calculer le nombre de mutations sur la stratégie
-let num_mutations = (new_state_action_map.len() as f32 * rng.gen_range(0.1..=0.3)).round() as usize;
-
-last_updated: current_time," // Reinsert corrected `current_time`
-creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
+                last_updated: current_time,
                 creation_context: format!("Evolution #{}, Performance {:.2}", 
                     self.evolution_count, self.current_episode.performance_score),
             };
@@ -521,36 +498,13 @@ creation_context: format!("Mutation de {} avec {} changements", best_strategy.na
             }
         }
         
+        // Cloner les informations nécessaires de la meilleure stratégie pour éviter les problèmes d'emprunt
+        let best_strategy_name = self.strategies[best_strategy_index].name.clone();
+        let best_strategy_effectiveness = self.strategies[best_strategy_index].effectiveness;
+        let best_strategy_state_action_map = self.strategies[best_strategy_index].state_action_map.clone();
+        
         // Créer une variation de cette stratégie
-        // Récupérer la meilleure stratégie de manière immuable
-let best_strategy = &self.strategies[best_strategy_index];
-
-// Maintenant, ajouter la nouvelle stratégie de manière mutable
-// Créez une nouvelle stratégie à partir de best_strategy ou d'une logique similaire
-let new_strategy = Strategy {
-    name: format!("strategy_{}", self.strategies.len() + 1),
-    state_action_map: best_strategy.state_action_map.clone(),
-    effectiveness: best_strategy.effectiveness * 0.8,  // Exemple de mutation
-    usage_count: 0,
-    // Obtenir l'heure actuelle
-let current_time = std::time::SystemTime::now()
-    .duration_since(std::time::UNIX_EPOCH)
-    .unwrap_or(std::time::Duration::from_secs(0))
-    .as_secs();
-
-// Calculer le nombre de mutations sur la stratégie
-let num_mutations = (new_state_action_map.len() as f32 * rng.gen_range(0.1..=0.3)).round() as usize;
-
-last_updated: current_time," // Reinsert corrected `current_time`
-creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
-    creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
-};
-
-// Ajouter la nouvelle stratégie à la liste
-self.strategies.push(new_strategy);
-
-// Utiliser la meilleure stratégie après avoir effectué l'emprunt mutable
-        let mut new_state_action_map = best_strategy.state_action_map.clone();
+        let mut new_state_action_map = best_strategy_state_action_map;
         
         // Modifier quelques états-actions aléatoires (10-30% de mutations)
         let mut rng = rand::thread_rng();
@@ -568,67 +522,35 @@ self.strategies.push(new_strategy);
             let state = &states[state_index];
             
             // Sélectionner une action aléatoire différente
-            let current_action = new_state_action_map.get(state).unwrap();
-            let mut new_actions: Vec<String> = self.actions.iter()
-                .filter(|&a| a != current_action)
-                .cloned()
-                .collect();
-            
-            if !new_actions.is_empty() {
-                let new_action = &new_actions[rng.gen_range(0..new_actions.len())];
-                new_state_action_map.insert(state.clone(), new_action.clone());
+            if let Some(current_action) = new_state_action_map.get(state) {
+                let new_actions: Vec<String> = self.actions.iter()
+                    .filter(|a| a != &current_action)
+                    .cloned()
+                    .collect();
+                
+                if !new_actions.is_empty() {
+                    let new_action = &new_actions[rng.gen_range(0..new_actions.len())];
+                    new_state_action_map.insert(state.clone(), new_action.clone());
+                }
             }
         }
         
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(Duration::from_secs(0))
-            .as_secs();
+        let current_time = get_current_time();
         
         // Créer la nouvelle stratégie
         let new_strategy = Strategy {
-            name: format!("strategy_{}_{}", best_strategy.name, self.strategies.len() + 1),
+            name: format!("strategy_{}_{}", best_strategy_name, self.strategies.len() + 1),
             state_action_map: new_state_action_map,
-            effectiveness: best_strategy.effectiveness * 0.8, // Légèrement inférieure au départ
+            effectiveness: best_strategy_effectiveness * 0.8, // Légèrement inférieure au départ
             usage_count: 0,
-            // Obtenir l'heure actuelle
-let current_time = std::time::SystemTime::now()
-    .duration_since(std::time::UNIX_EPOCH)
-    .unwrap_or(std::time::Duration::from_secs(0))
-    .as_secs();
-
-// Calculer le nombre de mutations sur la stratégie
-let num_mutations = (new_state_action_map.len() as f32 * rng.gen_range(0.1..=0.3)).round() as usize;
-
-last_updated: current_time," // Reinsert corrected `current_time`
-creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
-            creation_context: format!("Mutation de {} avec {} changements", 
-                best_strategy.name, num_mutations),
+            last_updated: current_time,
+            creation_context: format!("Mutation de {} avec {} changements ", 
+                best_strategy_name, num_mutations),
         };
         
-        // Créez une nouvelle stratégie à partir de best_strategy ou d'une logique similaire
-let new_strategy = Strategy {
-    name: format!("strategy_{}", self.strategies.len() + 1),
-    state_action_map: best_strategy.state_action_map.clone(),
-    effectiveness: best_strategy.effectiveness * 0.8,  // Exemple de mutation
-    usage_count: 0,
-    // Obtenir l'heure actuelle
-let current_time = std::time::SystemTime::now()
-    .duration_since(std::time::UNIX_EPOCH)
-    .unwrap_or(std::time::Duration::from_secs(0))
-    .as_secs();
-
-// Calculer le nombre de mutations sur la stratégie
-let num_mutations = (new_state_action_map.len() as f32 * rng.gen_range(0.1..=0.3)).round() as usize;
-
-last_updated: current_time," // Reinsert corrected `current_time`
-creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
-    creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
-};
-
-// Ajouter la nouvelle stratégie à la liste
-self.strategies.push(new_strategy);
-        println!("[AURORAE++] Stratégie mutée créée à partir de {}", best_strategy.name);
+        // Ajouter la nouvelle stratégie à la liste
+        self.strategies.push(new_strategy);
+        println!("[AURORAE++] Stratégie mutée créée à partir de {}", best_strategy_name);
     }
 
     // Nouvelle fonction : Processus de "rêve" pour consolider l'apprentissage
@@ -650,92 +572,15 @@ self.strategies.push(new_strategy);
                     .unwrap_or(std::cmp::Ordering::Equal));
             
             let episode_index = (rng.gen::<f32>().powi(2) * self.long_term_memory.len() as f32) as usize;
-            // Récupérer un épisode de manière immuable
-// Récupérer l'épisode de manière immuable
-// Récupérer l'épisode de manière immuable
-// Récupérer l'épisode de manière immuable
-let episode = &self.long_term_memory[episode_index.min(self.long_term_memory.len() - 1)];
-
-// Traiter l'épisode pour obtenir les états, actions, récompenses, etc.
-for i in 0..(episode.action_history.len().min(episode.state_history.len() - 1)) {
-    let state = &episode.state_history[i];
-    let action = &episode.action_history[i];
-    let reward = episode.reward_history[i];
-    let next_state = &episode.state_history[i + 1];
-
-    // Modifier légèrement la récompense pour explorer des variations
-    let dream_reward = if rng.gen::<f32>() < 0.2 {
-        reward * rng.gen_range(0.8..1.2)
-    } else {
-        reward
-    };
-
-    // Effectuer l'emprunt mutable pour mettre à jour la Q-table après avoir terminé avec l'emprunt immuable
-    self.update_q_value(action, dream_reward, next_state);
-}
-
-// Utiliser l'épisode pour obtenir les états, actions, récompenses, etc.
-for i in 0..(episode.action_history.len().min(episode.state_history.len() - 1)) {
-    let state = &episode.state_history[i];
-    let action = &episode.action_history[i];
-    let reward = episode.reward_history[i];
-    let next_state = &episode.state_history[i + 1];
-
-    // Modifier légèrement la récompense pour explorer des variations
-    let dream_reward = if rng.gen::<f32>() < 0.2 {
-        reward * rng.gen_range(0.8..1.2)
-    } else {
-        reward
-    };
-
-    // Effectuer l'emprunt mutable après l'emprunt immuable
-    self.update_q_value(action, dream_reward, next_state);
-}
-
-// Utiliser l'épisode pour obtenir les états, actions, récompenses, etc.
-for i in 0..(episode.action_history.len().min(episode.state_history.len() - 1)) {
-    let state = &episode.state_history[i];
-    let action = &episode.action_history[i];
-    let reward = episode.reward_history[i];
-    let next_state = &episode.state_history[i + 1];
-
-    // Modifier légèrement la récompense pour explorer des variations
-    let dream_reward = if rng.gen::<f32>() < 0.2 {
-        reward * rng.gen_range(0.8..1.2)
-    } else {
-        reward
-    };
-
-    // Effectuer l'emprunt mutable après l'emprunt immuable
-    self.update_q_value(action, dream_reward, next_state);
-}
-
-// Utiliser l'épisode pour mettre à jour la Q-table
-for i in 0..(episode.action_history.len().min(episode.state_history.len() - 1)) {
-    let state = &episode.state_history[i];
-    let action = &episode.action_history[i];
-    let reward = episode.reward_history[i];
-    let next_state = &episode.state_history[i + 1];
-
-    // Modifier légèrement la récompense pour explorer des variations
-    let dream_reward = if rng.gen::<f32>() < 0.2 {
-        reward * rng.gen_range(0.8..1.2)
-    } else {
-        reward
-    };
-
-    // Mettre à jour la Q-table après avoir terminé avec l'emprunt immuable
-    self.update_q_value(action, dream_reward, next_state);
-}
+            let episode_index_safe = episode_index.min(self.long_term_memory.len() - 1);
+            
+            // Cloner l'épisode pour éviter les problèmes d'emprunt
+            let episode = self.long_term_memory[episode_index_safe].clone();
             
             // "Rejouer" cet épisode avec des variations pour renforcer l'apprentissage
             for i in 0..(episode.action_history.len().min(episode.state_history.len() - 1)) {
-                let state = &episode.state_history[i];
-                let action = &episode.action_history[i];
-                let reward = episode.reward_history[i];
-                let next_state = &episode.state_history[i + 1];
-                
                 // Modifier légèrement la récompense pour explorer des variations
+                let reward = episode.reward_history[i];
                 let dream_reward = if rng.gen::<f32>() < 0.2 {
                     reward * rng.gen_range(0.8..1.2)
                 } else {
@@ -747,8 +592,8 @@ for i in 0..(episode.action_history.len().min(episode.state_history.len() - 1)) 
                 let original_lr = self.learning_rate;
                 self.learning_rate *= 0.3; // Réduire l'impact des rêves
                 
-                self.state = state.clone(); // Temporairement changer l'état pour la mise à jour
-                self.update_q_value(action, dream_reward, next_state);
+                self.state = episode.state_history[i].clone(); // Temporairement changer l'état pour la mise à jour
+                self.update_q_value(&episode.action_history[i], dream_reward, &episode.state_history[i + 1]);
                 
                 self.learning_rate = original_lr;
             }
