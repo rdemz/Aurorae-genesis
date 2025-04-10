@@ -516,6 +516,17 @@ impl LearningAgent {
 let best_strategy = &self.strategies[best_strategy_index];
 
 // Maintenant, ajouter la nouvelle stratégie de manière mutable
+// Créez une nouvelle stratégie à partir de best_strategy ou d'une logique similaire
+let new_strategy = Strategy {
+    name: format!("strategy_{}", self.strategies.len() + 1),
+    state_action_map: best_strategy.state_action_map.clone(),
+    effectiveness: best_strategy.effectiveness * 0.8,  // Exemple de mutation
+    usage_count: 0,
+    last_updated: current_time,
+    creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
+};
+
+// Ajouter la nouvelle stratégie à la liste
 self.strategies.push(new_strategy);
 
 // Utiliser la meilleure stratégie après avoir effectué l'emprunt mutable
@@ -565,7 +576,18 @@ self.strategies.push(new_strategy);
                 best_strategy.name, num_mutations),
         };
         
-        self.strategies.push(new_strategy);
+        // Créez une nouvelle stratégie à partir de best_strategy ou d'une logique similaire
+let new_strategy = Strategy {
+    name: format!("strategy_{}", self.strategies.len() + 1),
+    state_action_map: best_strategy.state_action_map.clone(),
+    effectiveness: best_strategy.effectiveness * 0.8,  // Exemple de mutation
+    usage_count: 0,
+    last_updated: current_time,
+    creation_context: format!("Mutation de {} avec {} changements", best_strategy.name, num_mutations),
+};
+
+// Ajouter la nouvelle stratégie à la liste
+self.strategies.push(new_strategy);
         println!("[AURORAE++] Stratégie mutée créée à partir de {}", best_strategy.name);
     }
 
