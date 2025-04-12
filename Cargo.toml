@@ -2,61 +2,189 @@
 name = "aurorae"
 version = "0.1.0"
 edition = "2021"
-authors = ["TonNom <ton@email.com>"]
-description = "Moteur vivant autonome AURORAE++ pour la création crypto intelligente"
+authors = ["rdemz <rdemz@email.com>"]
+description = "Moteur vivant autonome AURORAE++ pour la création crypto intelligente avec capacités métacognitives et auto-évolution"
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/rdemz/Aurorae-genesis"
 
 [[bin]]
 name = "aurorae"
 path = "aurorae/main.rs"
 
+[lib]
+name = "aurorae"
+path = "aurorae/lib.rs"
+
 [dependencies]
-# Asynchronous runtime
-tokio = { version = "1.37", features = ["macros", "rt-multi-thread", "full"] }
+# ==================== RUNTIME & ASYNCHRONE ====================
+tokio = { version = "1.37", features = ["macros", "rt-multi-thread", "full", "time", "sync", "io-util"] }
+tokio-util = "0.7"
+futures = "0.3"
+async-trait = "0.1"
+atomic = "0.6"         # Atomics avancés pour les opérations concurrentes
 
-# Ethereum & cryptographic tools
-ethers = "2.0.14"
+# ==================== BLOCKCHAIN & CRYPTO ====================
+# Ethereum & cryptographie multi-chaînes
+ethers = { version = "2.0.14", features = ["legacy", "abigen", "eip712"] }
+solana-sdk = "1.18"
+solana-program = "1.18"
+anchor-lang = "0.29"   # Framework pour développement Solana
+near-sdk = "5.0"       # Intégration NEAR Protocol
+polkadot-sdk = "1.0"   # Intégration Substrate/Polkadot
+substrate-api-client = "0.17"
 k256 = "0.13.1"
-uuid = { version = "1.7", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
-rand = "0.8"
+ring = "0.17"
+sha2 = "0.10"
+sha3 = "0.10"          # Algorithmes de hachage Keccak/SHA-3
+rand = { version = "0.8", features = ["small_rng", "std_rng"] }
+uuid = { version = "1.7", features = ["v4", "serde", "v7"] }
+bs58 = "0.5"           # Pour encodage d'adresses Solana/Substrate
+libp2p = "0.53"        # Pour le réseau P2P décentralisé
+merkle_light = "0.4"   # Arbres de Merkle pour preuves blockchain
 
-# Serialization and deserialization tools
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+# NFT & Tokens
+cosmwasm-std = "1.5"   # Standard pour smart contracts cross-chain
+primitive-types = "0.12"
+num-bigint = "0.4"
+num-traits = "0.2"
+bip39 = "2.0"          # Pour génération de phrases mnémoniques
+hex = "0.4"
+base64 = "0.21"
 
-# Logging
-log = "0.4"
+# ==================== IA & APPRENTISSAGE MACHINE ====================
+# Pytorch/tch-rs - Tenseurs & réseaux de neurones
+tch = { version = "0.14", features = ["download-models"] }
+ndarray = { version = "0.15", features = ["serde", "blas"] }
+ndarray-stats = "0.5"
+ndarray-rand = "0.14"
+blas-src = { version = "0.9", features = ["openblas"] }
+openblas-src = { version = "0.10", features = ["cblas", "system"] }
 
-# Filesystem utilities
-fs_extra = "1.3"
+# Métacognition & apprentissage par renforcement
+async-openai = "0.14"         # Interface OpenAI
+rust-bert = { version = "0.21", features = ["download-model-http"] }
+tract-onnx = "0.20"           # Exécuter des modèles ONNX
+tract-tensorflow = "0.20"     # Exécuter des modèles TensorFlow
+smartcore = "0.3"             # Algorithmes ML purs Rust
+linfa = "0.7"                 # Framework ML pour Rust
+linfa-clustering = "0.7"      # Clustering (K-means, DBSCAN)
+linfa-reduction = "0.7"       # Réduction de dimensionnalité (PCA)
+hnsw = "0.11"                 # Recherche vectorielle approximative efficace
+faiss-rs = "0.2"              # Bibliothèque de recherche de similarité
+graphlib = "0.6"              # Manipulation de graphes pour les GANs et GNNs
 
-# HTTP requests and GitHub interaction
-reqwest = { version = "0.11", features = ["json", "blocking", "rustls-tls"] }
+# Neurosciences computationnelles
+special = "0.10"              # Fonctions mathématiques spéciales
+nalgebra = "0.32"             # Algèbre linéaire avancée
+peroxide = "0.34"             # Algorithmes d'intégration pour les modèles neuronaux
+rayon = "1.8"                 # Parallélisation des calculs
+petgraph = "0.6"              # Bibliothèque pour représenter des réseaux neuronaux
 
-# Code parsing & quoting
-syn = { version = "2.0", features = ["full", "extra-traits"] }
+# ==================== ANALYSE DE CODE & GÉNÉRATION ====================
+syn = { version = "2.0", features = ["full", "extra-traits", "parsing", "printing", "clone-impls", "visit"] }
 quote = "1.0"
 proc-macro2 = "1.0"
-
-# Cargo metadata utilities
 cargo_metadata = "0.18"
+rust-analyzer-wasm = "0.0.1"
+wasm-bindgen = "0.2"          # Pour interopérabilité avec WebAssembly
+fallible-iterator = "0.3"     # Itérateurs qui peuvent échouer
+derive_more = "0.99"          # Dérivation simplifiée des traits
+darling = "0.20"              # Parsing des attributs
+static_assertions = "1.1"     # Assertions à la compilation
 
-# Cryptographic tools
-ring = "0.17"
+# ==================== FORMAL VERIFICATION & PROOF SYSTEMS ====================
+z3 = { version = "0.12", features = ["static-link-z3"] }  # Solveur SMT
+symbolicexecution = "0.1"     # Exécution symbolique
+quickcheck = "1.0"            # Test basé sur propriétés
+proptest = "1.3"              # Test basé sur propriétés avancé
+kani-verifier = "0.46"        # Vérification de modèle pour Rust
+prusti = "0.1"                # Vérification formelle
+
+# ==================== OUTILS & UTILITAIRES ====================
+# Date, temps et identifiants
+chrono = { version = "0.4", features = ["serde", "clock"] }
+
+# Sérialisation
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_json = "1.0"
+serde_yaml = "0.9"            # Pour configs en YAML
+bincode = "1.3"
+toml = "0.8"
+rmp = "0.8"                   # MessagePack
+rmp-serde = "1.1"             # Serde pour MessagePack
+
+# Réseaux & HTTP
+reqwest = { version = "0.11", features = ["json", "blocking", "rustls-tls", "stream", "gzip", "brotli"] }
+url = "2.4"
+hyper = { version = "0.14", features = ["full", "http2"] }
+warp = "0.3"                  # Pour APIs
+tungstenite = "0.20"          # WebSockets
+axum = "0.7"                  # Framework web moderne
+tower = "0.4"                 # Middleware pour services réseau
+tower-http = "0.4"            # Middleware HTTP
+
+# Système de fichiers et I/O
+fs_extra = "1.3"
+walkdir = "2.4"
 flate2 = "1.0"
 tar = "0.4"
+zip = "0.6"
+memmap2 = "0.7"               # Memory mapping
+tempfile = "3.8"              # Fichiers temporaires
+directories = "5.0"           # Standard pour les chemins d'application
 
-# Regular expressions
+# Logs & observation
+log = "0.4"
+env_logger = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+thiserror = "1.0"
+anyhow = "1.0"                # Gestion d'erreur simplifiée
+metrics = "0.21"              # Métriques pour monitoring
+opentelemetry = { version = "0.20", features = ["metrics", "trace"] }
+
+# Expressions régulières
 regex = "1.10"
+fancy-regex = "0.11"          # Expressions régulières avancées
 
-# Neural network and data analysis
-tch = "0.4"
-ndarray = "0.15"
-
-# 🧠 INTELLIGENCE STRATÉGIQUE
-async-openai = "0.14" 
-
-# 🔧 OUTILS COMPLÉMENTAIRES
+# ==================== CONCURRENCE & STRUCTURES DE DONNÉES ====================
+parking_lot = { version = "0.12", features = ["serde"] }
+crossbeam = "0.8"
 lazy_static = "1.4"
-parking_lot = "0.12"
+dashmap = "5.5"               # HashMap thread-safe haute performance
+evmap = "10.0"                # Eventually consistent concurrent map
+ahash = "0.8"                 # Hachage rapide
+lru = "0.12"                  # Cache LRU
+tinyvec = { version = "1.6", features = ["alloc"] }  # Small vec optimisé
+itertools = "0.12"            # Outils pour itérateurs
+maplit = "1.0"                # Macros pour initialiser des collections
+
+# ==================== SÉCURITÉ & VÉRIFICATION ====================
+once_cell = "1.18"
+smallvec = { version = "1.11", features = ["serde", "union"] }
+argon2 = "0.5"                # Hachage sécurisé pour les mots de passe
+zeroize = "1.6"               # Effacement sécurisé de la mémoire
+secrecy = "0.8"               # Encapsulation des secrets
+sodiumoxide = "0.2"           # Cryptographie libsodium
+aes-gcm = "0.10"              # Chiffrement AES-GCM
+chacha20poly1305 = "0.10"     # Chiffrement ChaCha20-Poly1305
+curve25519-dalek = "4.1"      # Cryptographie sur courbe elliptique
+
+# ==================== AUTO-ÉVOLUTION & MÉTASYSTÈME ====================
+rustyline = "12.0"            # Pour CLI interactive
+tui = "0.19"                  # Interface terminal
+crossterm = "0.27"            # Contrôle du terminal
+clap = { version = "4.4", features = ["derive"] }  # Parsing d'arguments CLI
+indicatif = "0.17"            # Barres de progression
+console = "0.15"              # Formatage de terminal
+
+# ==================== NEUROMORPHIC & DISTRIBUTED COMPUTE ====================
+actix = "0.13"                # Framework d'acteurs pour calcul distribué
+actix-rt = "2.9"              # Runtime actix
+actix-web = "4.4"             # Framework web basé sur acteurs
+raft-rs = "0.7"               # Consensus distribué
+wasmtime = "15.0"             # Runtime WebAssembly sécurisé
+wasmer = "4.2"                # Runtime WebAssembly alternatif
+dlopen = "0.1"                # Chargement dynamique de bibliothèques
+async-std = "1.12"            # Runtime async alternatif
