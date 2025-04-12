@@ -71,7 +71,7 @@ linfa = "0.7"                 # Framework ML pour Rust
 linfa-clustering = "0.7"      # Clustering (K-means, DBSCAN)
 linfa-reduction = "0.7"       # Réduction de dimensionnalité (PCA)
 hnsw = "0.11"                 # Recherche vectorielle approximative efficace
-faiss-rs = "0.2"              # Bibliothèque de recherche de similarité
+faiss-rs = "0.12.1"              # Bibliothèque de recherche de similarité
 graphlib = "0.6"              # Manipulation de graphes pour les GANs et GNNs
 
 # Neurosciences computationnelles
