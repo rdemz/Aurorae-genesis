@@ -165,7 +165,7 @@ maplit = "1.0"                # Macros pour initialiser des collections
 once_cell = "1.18"
 smallvec = { version = "1.11", features = ["serde", "union"] }
 argon2 = "0.5"                # Hachage sécurisé pour les mots de passe
-zeroize = "1.7.0"             # Effacement sécurisé de la mémoire
+zeroize = "1.3.0"             # Effacement sécurisé de la mémoire (version compatible)
 # secrecy = "0.8"  # Commenté temporairement pour résoudre les conflits de dépendancessulation des secrets
 sodiumoxide = "0.2"           # Cryptographie libsodium
 aes-gcm = "0.10"              # Chiffrement AES-GCM
